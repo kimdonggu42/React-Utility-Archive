@@ -19,5 +19,5 @@ export const useKeyDown = (keys: string[], callback: () => void) => {
 
 // 사용법
 // useKeyDown(['Escape', ...], () => {
-//   action();
+//   callback();
 // });

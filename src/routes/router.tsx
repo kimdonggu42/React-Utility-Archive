@@ -1,20 +1,20 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import Category from './Category';
-import Pagination from './Pagination';
-import Modal from './Modal';
+import CategoryPage from '@/routes/categoryPage';
+import PaginationPage from '@/routes/paginationPage';
+import ModalPage from '@/routes/modalPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Category />,
+    element: <CategoryPage />,
   },
   {
     path: '/pagination',
-    element: <Pagination />,
+    element: <PaginationPage />,
   },
   {
     path: 'modal',
-    element: <Modal />,
+    element: <ModalPage />,
   },
 ]);

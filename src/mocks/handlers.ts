@@ -1,8 +1,8 @@
 import { http, HttpResponse } from 'msw';
-import { paginationDummyData } from './dummyData';
+import { paginationDummyData } from '@/mocks/dummyData';
 
 export const handlers = [
-  http.get('/post', ({ request }) => {
+  http.get('/posts', ({ request }) => {
     const url = new URL(request.url);
     const page = Number(url.searchParams.get('page'));
     const parse = Number(url.searchParams.get('parse'));

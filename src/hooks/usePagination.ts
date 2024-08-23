@@ -1,7 +1,7 @@
 interface UsePaginationProps {
-  currentPageNumber: number;
-  totalPageCount: number;
-  visiblePageCount?: number;
+  currentPageNumber: number; // 현재 페이지 번호
+  totalPageCount: number; // 전체 페이지 번호
+  visiblePageCount?: number; // 페이지네이션에서 한 번에 보여줄 페이지 개수
 }
 
 export const usePagination = ({

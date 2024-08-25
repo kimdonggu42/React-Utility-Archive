@@ -34,13 +34,17 @@ export default function PaginationPage() {
   }, [page, parse]);
 
   return (
-    <div>
-      <ul>
-        {posts.map((post) => (
-          <li key={post.id}>{post.text}</li>
-        ))}
-      </ul>
-      <Pagination currentPageNumber={Number(page)} totalPageCount={totalPageCount} />
+    <div className='flex h-screen flex-col justify-center'>
+      <div className='flex flex-col items-center gap-y-5'>
+        <ul className='flex flex-col gap-y-2'>
+          {posts.map((post) => (
+            <li key={post.id} className='border border-black px-10'>
+              {post.text}
+            </li>
+          ))}
+        </ul>
+        <Pagination currentPageNumber={Number(page)} totalPageCount={totalPageCount} />
+      </div>
     </div>
   );
 }

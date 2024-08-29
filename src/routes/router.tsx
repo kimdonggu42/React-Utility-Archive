@@ -1,8 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import CategoryPage from '@/routes/categoryPage';
-import PaginationPage from '@/routes/paginationPage';
-import ModalPage from '@/routes/modalPage';
+import CategoryPage from '@/routes/CategoryPage';
+import PaginationPage from '@/routes/PaginationPage';
+import InfiniteScrollPage from './InfiniteScrollPage';
+import ModalPage from '@/routes/ModalPage';
 
 export const router = createBrowserRouter([
   {
@@ -10,8 +11,12 @@ export const router = createBrowserRouter([
     element: <CategoryPage />,
   },
   {
-    path: '/pagination',
+    path: 'pagination',
     element: <PaginationPage />,
+  },
+  {
+    path: 'infinitescroll',
+    element: <InfiniteScrollPage />,
   },
   {
     path: 'modal',

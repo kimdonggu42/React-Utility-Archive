@@ -4,26 +4,23 @@ import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import Pagination from '@/components/common/Pagination';
-
-interface Data {
-  id: number;
-  text: string;
-}
+import { Posts } from '@/types/dummyData';
+import { paginationPageSize } from '@/constants/pageSize';
 
 export default function PaginationPage() {
-  const [posts, setPosts] = useState<Data[]>([]);
+  const [posts, setPosts] = useState<Posts[]>([]);
   const [totalPageCount, setTotalPageCount] = useState<number>(0);
 
   const location = useLocation();
 
   const queryParams = new URLSearchParams(location.search);
   const page = queryParams.get('page');
-  const parse = queryParams.get('parse');
+  const parse = queryParams.get('size');
 
   useEffect(() => {
     const getPosts = async () => {
       try {
-        const res = await axios.get(`/posts?page=${page}&parse=${parse}`);
+        const res = await axios.get(`/posts?page=${page}&size=${paginationPageSize}`);
         setPosts(res.data.data);
         setTotalPageCount(res.data.totalPageCount);
       } catch (err) {

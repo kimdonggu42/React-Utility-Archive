@@ -1,22 +1,23 @@
 import { http, HttpResponse } from 'msw';
-import { paginationDummyData } from '@/mocks/dummyData';
+import { posts } from '@/mocks/dummyData';
 
 export const handlers = [
   http.get('/posts', ({ request }) => {
     const url = new URL(request.url);
     const page = Number(url.searchParams.get('page'));
-    const parse = Number(url.searchParams.get('parse'));
+    const size = Number(url.searchParams.get('size'));
 
-    if (!page || !parse) {
+    if (!page || !size) {
       return new HttpResponse(null, { status: 404 });
     }
 
-    const dataStartIndex = (page - 1) * parse;
-    const dataEndIndex = dataStartIndex + parse;
-    const data = paginationDummyData.slice(dataStartIndex, dataEndIndex);
+    const dataStartIndex = (page - 1) * size;
+    const dataEndIndex = dataStartIndex + size;
+    const data = posts.slice(dataStartIndex, dataEndIndex);
 
     const response = {
-      totalPageCount: Math.ceil(paginationDummyData.length / parse),
+      totalDataCount: posts.length,
+      totalPageCount: Math.ceil(posts.length / size),
       data,
     };
 

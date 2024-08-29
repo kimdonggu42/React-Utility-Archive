@@ -20,6 +20,12 @@ export default function CategoryPage() {
         <Button variant='outline' onClick={() => navigate(`/infinitescroll`)}>
           무한 스크롤
         </Button>
+        <Button variant='outline' onClick={() => navigate(`/debounce`)}>
+          디바운스
+        </Button>
+        <Button variant='outline' onClick={() => navigate(`/throttle`)}>
+          쓰로틀
+        </Button>
       </div>
     </div>
   );

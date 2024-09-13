@@ -21,4 +21,4 @@ export const useDebounce = () => {
 
 // 사용법
 // const debounce = useDebounce();
-// debounce(() => callback(), 300);
+// debounce(callback, 300);

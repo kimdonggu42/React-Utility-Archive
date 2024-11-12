@@ -26,6 +26,9 @@ export default function CategoryPage() {
         <Button variant='outline' onClick={() => navigate(`/throttle`)}>
           쓰로틀
         </Button>
+        <Button variant='outline' onClick={() => navigate(`/audiovisualizer`)}>
+          오디오 비주얼라이저
+        </Button>
       </div>
     </div>
   );

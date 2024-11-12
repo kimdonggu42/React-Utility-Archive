@@ -2,10 +2,11 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import CategoryPage from '@/routes/CategoryPage';
 import PaginationPage from '@/routes/PaginationPage';
-import InfiniteScrollPage from './InfiniteScrollPage';
-import DebouncePage from './DebouncePage';
-import ThrottlePage from './ThrottlePage';
+import InfiniteScrollPage from '@/routes/InfiniteScrollPage';
+import DebouncePage from '@/routes/DebouncePage';
+import ThrottlePage from '@/routes/ThrottlePage';
 import ModalPage from '@/routes/ModalPage';
+import AudioVisualizerPage from '@/routes/AudioVisualizePage';
 
 export const router = createBrowserRouter([
   {
@@ -31,5 +32,9 @@ export const router = createBrowserRouter([
   {
     path: 'throttle',
     element: <ThrottlePage />,
+  },
+  {
+    path: 'audiovisualizer',
+    element: <AudioVisualizerPage />,
   },
 ]);

@@ -7,6 +7,7 @@ import DebouncePage from '@/routes/DebouncePage';
 import ThrottlePage from '@/routes/ThrottlePage';
 import ModalPage from '@/routes/ModalPage';
 import AudioVisualizerPage from '@/routes/AudioVisualizePage';
+import SpeechRecognitionPage from './SpeechRecognitionPage';
 
 export const router = createBrowserRouter([
   {
@@ -36,5 +37,9 @@ export const router = createBrowserRouter([
   {
     path: 'audiovisualizer',
     element: <AudioVisualizerPage />,
+  },
+  {
+    path: 'speechrecognition',
+    element: <SpeechRecognitionPage />,
   },
 ]);

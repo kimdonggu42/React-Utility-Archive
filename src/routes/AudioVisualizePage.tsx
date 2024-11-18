@@ -34,7 +34,10 @@ export default function AudioVisualizerPage() {
         const analyserNode = audioContextRef.current.createAnalyser();
         analyserNodeRef.current = analyserNode;
 
-        // AudioContext의 createMediaStreamSource를 사용하여 사용자의 마이크로부터 얻은(mediaStream 발생하는 오디오 데이터)
+        // createMediaStreamSource는 Web Audio API에서 제공하는 메서드로,
+        // 미디어 스트림(예: 사용자 마이크나 카메라에서 받은 오디오/비디오 스트림)을 AudioContext에 연결하여,
+        // 해당 스트림의 오디오 데이터를 Web Audio API에서 처리할 수 있도록 해줌
+
         // MediaStream(mediaStream)을 오디오 처리 그래프에 연결할 수 있는 MediaStreamAudioSourceNode(mediaStreamAudioSourceNode) 생성
         const mediaStreamAudioSourceNode =
           audioContextRef.current.createMediaStreamSource(mediaStream);

@@ -23,24 +23,29 @@ export default function AudioVisualizerPage() {
       setIsActive(false);
     } else {
       try {
-        // getUserMedia로 마이크에 접근하여 사용자의 마이크로부터 얻은 오디오 트랙을 포함하고 있는 MediaStream(mediaStream) 생성
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaStreamRef.current = mediaStream;
-
+        // 오디오 처리를 위한 AudioContext 생성
+        // AudioContext 내에서는 각각의 AudioNode 들로 소리를 제어한다.
         const audioContext = new AudioContext();
         audioContextRef.current = audioContext;
 
-        // AudioContext의 createAnalyser를 사용하여, 주파수를 시각화 할 수 있는 AnalyserNode(analyserNode) 생성
+        // getUserMedia로 마이크에 접근하여 사용자의 마이크로부터 얻은 오디오 트랙을 포함하고 있는 MediaStream 생성한다.
+        // 이 메서드는 사용자의 미디어 장치(마이크 또는 카메라)에서 데이터를 가져오는 역할을 함
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaStreamRef.current = mediaStream;
+
+        // createMediaStreamSource는 오디오 미디어 스트림(MediaStream, 예: 사용자의 마이크, 웹 오디오 파일 등)을
+        // AudioContext의 오디오 처리 그래프에 연결하여 해당 스트림의 오디오 데이터를 오디오 처리 그래프에 추가할 수 있도록 한다.
+        const mediaStreamAudioSourceNode =
+          audioContextRef.current.createMediaStreamSource(mediaStream);
+
+        // AudioContext의 createAnalyser를 사용하여, 주파수를 시각화 할 수 있는 AnalyserNode 생성
+        // AnalyserNode는 오디오 데이터를 분석하고, 이를 시각화하거나 다른 처리에 활용할 수 있게 해주는 노드이다.
         const analyserNode = audioContextRef.current.createAnalyser();
         analyserNodeRef.current = analyserNode;
 
-        // createMediaStreamSource는 Web Audio API에서 제공하는 메서드로,
-        // 미디어 스트림(예: 사용자 마이크나 카메라에서 받은 오디오/비디오 스트림)을 AudioContext에 연결하여,
-        // 해당 스트림의 오디오 데이터를 Web Audio API에서 처리할 수 있도록 해줌
-
-        // MediaStream(mediaStream)을 오디오 처리 그래프에 연결할 수 있는 MediaStreamAudioSourceNode(mediaStreamAudioSourceNode) 생성
-        const mediaStreamAudioSourceNode =
-          audioContextRef.current.createMediaStreamSource(mediaStream);
+        // 이제 MediaStreamAudioSourceNode를 AnalyserNode에 연결하여, 오디오 데이터를 분석할 수 있도록 설정한다.
+        // 즉, MediaStreamAudioSourceNode는 마이크에서 받은 실시간 오디오 데이터를 가져오고,
+        // AnalyserNode는 그 데이터를 실시간으로 분석하여, 주파수 정보 등을 얻을 수 있게 된다.
         mediaStreamAudioSourceNode.connect(analyserNodeRef.current);
 
         // fftSize: AnalyserNode에서 주파수 분석을 위해 사용할 FFT(빠른 푸리에 변환) 크기를 설정하는 속성,
@@ -116,3 +121,5 @@ export default function AudioVisualizerPage() {
     </div>
   );
 }
+
+// Web Audio API로 시각화하기: https://developer.mozilla.org/ko/docs/Web/API/Web_Audio_API/Visualizations_with_Web_Audio_API

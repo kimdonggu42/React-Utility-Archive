@@ -71,3 +71,5 @@ export const useSpeechRecognition = (isActive: boolean) => {
 
   return { transcript, startSpeechRecognition, stopSpeechRecognition };
 };
+
+// SpeechRecognition: https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition

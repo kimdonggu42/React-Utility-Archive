@@ -1,18 +1,18 @@
 import { createBrowserRouter } from 'react-router-dom';
 
-import CategoryPage from '@/routes/CategoryPage';
-import PaginationPage from '@/routes/PaginationPage';
-import InfiniteScrollPage from '@/routes/InfiniteScrollPage';
-import DebouncePage from '@/routes/DebouncePage';
-import ThrottlePage from '@/routes/ThrottlePage';
-import ModalPage from '@/routes/ModalPage';
-import AudioVisualizerPage from '@/routes/AudioVisualizePage';
-import SpeechRecognitionPage from './SpeechRecognitionPage';
+import App from '@/app';
+import PaginationPage from '@/pagination/PaginationPage';
+import InfiniteScrollPage from '@/infinite-scroll/InfiniteScrollPage';
+import DebouncePage from '@/debounce/DebouncePage';
+import ThrottlePage from '@/throttle/ThrottlePage';
+import ModalPage from '@/modal/ModalPage';
+import AudioVisualizerPage from '@/web-audio-api/AudioVisualizerPage';
+import SpeechRecognitionPage from '@/speech-recognition/SpeechRecognitionPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <CategoryPage />,
+    element: <App />,
   },
   {
     path: 'modal',

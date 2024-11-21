@@ -2,9 +2,10 @@ import axios from 'axios';
 
 import { useState, useRef, useEffect } from 'react';
 
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useInfiniteScroll } from '@/infinite-scroll/useInfiniteScroll';
 import { Posts } from '@/types/dummyData';
-import { infiniteScrollPageSize } from '@/constants/pageSize';
+
+const infiniteScrollPageSize = 10;
 
 export default function InfiniteScrollPage() {
   const [posts, setPosts] = useState<Posts[]>([]);

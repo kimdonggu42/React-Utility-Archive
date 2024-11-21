@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useThrottle } from '@/hooks/useThrottle';
+import { useThrottle } from '@/throttle/useThrottle';
 
 export default function ThrottlePage() {
   const [numbers, setNumbers] = useState<number[]>([0, 0, 0, 0]);

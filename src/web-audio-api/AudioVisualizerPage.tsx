@@ -23,16 +23,19 @@ export default function AudioVisualizerPage() {
       setIsActive(false);
     } else {
       try {
-        // 오디오 처리를 위한 AudioContext 생성
-        // AudioContext 내에서는 각각의 AudioNode 들로 소리를 제어한다.
-        const audioContext = new AudioContext();
-        audioContextRef.current = audioContext;
-
-        // getUserMedia로 마이크에 접근하여 사용자의 마이크로부터 얻은 오디오 트랙을 포함하고 있는 MediaStream 생성한다.
+        // 1. getUserMedia로 마이크 오디오 가져오기
+        // getUserMedia로 마이크에 접근하여 사용자의 마이크로부터 얻은 오디오 트랙을 포함하고 있는 MediaStream을 생성한다.
         // 이 메서드는 사용자의 미디어 장치(마이크 또는 카메라)에서 데이터를 가져오는 역할을 함
         const mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaStreamRef.current = mediaStream;
 
+        // 2. Audiocontext 생성
+        // 오디오 처리를 위해 여러 노드를 연결하고 제어하는 AudioContext 생성
+        // AudioContext 내에서는 각각의 AudioNode 들로 소리를 제어한다.
+        const audioContext = new AudioContext();
+        audioContextRef.current = audioContext;
+
+        // 3. MediaStreamAudioSourceNode로 오디오 소스 생성
         // createMediaStreamSource는 오디오 미디어 스트림(MediaStream, 예: 사용자의 마이크, 웹 오디오 파일 등)을
         // AudioContext의 오디오 처리 그래프에 연결하여 해당 스트림의 오디오 데이터를 오디오 처리 그래프에 추가할 수 있도록 한다.
         const mediaStreamAudioSourceNode =

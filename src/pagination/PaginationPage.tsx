@@ -3,9 +3,10 @@ import { useLocation } from 'react-router-dom';
 
 import { useState, useEffect } from 'react';
 
-import Pagination from '@/components/common/Pagination';
+import Pagination from '@/pagination/Pagination';
 import { Posts } from '@/types/dummyData';
-import { paginationPageSize } from '@/constants/pageSize';
+
+const paginationPageSize = 5;
 
 export default function PaginationPage() {
   const [posts, setPosts] = useState<Posts[]>([]);

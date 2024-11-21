@@ -5,7 +5,7 @@ const options = {
   root: null,
   rootMargin: '0px',
   threshold: 1,
-};
+} as const;
 
 export const useInfiniteScroll = (callback: () => void) => {
   const targetRef = useRef(null);

@@ -1,8 +1,7 @@
 import { useState } from 'react';
+import { useKeyDown } from '@/modal/useKeyDown';
 
-import { useKeyDown } from '@/hooks/useKeyDown';
-
-export interface ModalProps {
+interface ModalProps {
   modalToggleHandler: () => void;
   children: React.ReactNode;
 }

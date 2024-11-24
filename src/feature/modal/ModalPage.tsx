@@ -1,5 +1,5 @@
-import Modal from '@/modal/Modal';
-import { useToggle } from '@/modal/useToggle';
+import Modal from '@/feature/modal/Modal';
+import { useToggle } from '@/feature/modal/useToggle';
 
 export default function ModalPage() {
   const { isToggled, toggle } = useToggle();

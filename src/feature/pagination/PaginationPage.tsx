@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 import { useState, useEffect } from 'react';
 
-import Pagination from '@/pagination/Pagination';
+import Pagination from '@/feature/pagination/Pagination';
 import { Posts } from '@/types/dummyData';
 
 const paginationPageSize = 5;

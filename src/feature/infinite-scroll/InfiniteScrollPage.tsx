@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { useState, useRef, useEffect } from 'react';
 
-import { useInfiniteScroll } from '@/infinite-scroll/useInfiniteScroll';
+import { useInfiniteScroll } from '@/feature/infinite-scroll/useInfiniteScroll';
 import { Posts } from '@/types/dummyData';
 
 const infiniteScrollPageSize = 10;

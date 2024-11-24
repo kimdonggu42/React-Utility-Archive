@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useKeyDown } from '@/modal/useKeyDown';
+import { useKeyDown } from '@/feature/modal/useKeyDown';
 
 interface ModalProps {
   modalToggleHandler: () => void;

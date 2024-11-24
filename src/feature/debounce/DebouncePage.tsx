@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDebounce } from '@/debounce/useDebounce';
+import { useDebounce } from '@/feature/debounce/useDebounce';
 
 export default function DebouncePage() {
   const [text, setText] = useState<string>('');

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { usePagination } from '@/pagination/usePagination';
+import { usePagination } from '@/feature/pagination/usePagination';
 
 interface PaginationProps {
   currentPageNumber: number;

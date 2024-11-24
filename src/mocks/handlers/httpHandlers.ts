@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { posts } from '@/mocks/dummyData';
 
-export const handlers = [
+export const httpHandlers = [
   http.get('/posts', ({ request }) => {
     const url = new URL(request.url);
     const page = Number(url.searchParams.get('page'));

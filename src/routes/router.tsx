@@ -9,6 +9,8 @@ import ModalPage from '@/modal/ModalPage';
 import AudioVisualizerPage from '@/web-audio-api/AudioVisualizerPage';
 import SpeechRecognitionPage from '@/speech-recognition/SpeechRecognitionPage';
 
+import WebSocketPage from '@/webSocket/WebSocketPage';
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -41,5 +43,9 @@ export const router = createBrowserRouter([
   {
     path: 'speechrecognition',
     element: <SpeechRecognitionPage />,
+  },
+  {
+    path: 'websocket',
+    element: <WebSocketPage />,
   },
 ]);

@@ -25,6 +25,10 @@ const categories = [
     pageNum: 6,
     path: 'speechrecognition',
   },
+  {
+    pageNum: 7,
+    path: 'websocket',
+  },
 ] as const;
 
 export default function App() {

@@ -8,7 +8,7 @@ export default function WebSocketPage() {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // WebSocket 서버에 연결
+    // WebSocket 서버에 연결 요청
     const socket = new WebSocket('ws://localhost:8080');
     socketRef.current = socket;
 

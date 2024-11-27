@@ -36,16 +36,14 @@ export default function AudioVisualizerPage() {
         audioContextRef.current = audioContext;
 
         // 3. MediaStreamAudioSourceNode로 오디오 소스 생성
-        // createMediaStreamSource는 오디오 미디어 스트림(MediaStream, 예: 사용자의 마이크, 웹 오디오 파일 등)을
-        // AudioContext의 오디오 처리 그래프에 연결하여 해당 스트림의 오디오 데이터를 오디오 처리 그래프에 추가할 수 있도록 한다.
-        const mediaStreamAudioSourceNode =
-          audioContextRef.current.createMediaStreamSource(mediaStream);
+        // audioContext.createMediaStreamSource()는 mediaStream을 입력으로 받아서, 이를 AudioNode로 변환한다.
+        // 이렇게 변환된 mediaStreamAudioSourceNode는 audioContext에서 처리할 수 있는 오디오 소스로 사용된다.
+        const mediaStreamAudioSourceNode = audioContext.createMediaStreamSource(mediaStream);
 
         // AudioContext의 createAnalyser를 사용하여, 주파수를 시각화 할 수 있는 AnalyserNode 생성
         // AnalyserNode는 오디오 데이터를 분석하고, 이를 시각화하거나 다른 처리에 활용할 수 있게 해주는 노드이다.
         const analyserNode = audioContextRef.current.createAnalyser();
         analyserNodeRef.current = analyserNode;
-
         // 이제 MediaStreamAudioSourceNode를 AnalyserNode에 연결하여, 오디오 데이터를 분석할 수 있도록 설정한다.
         // 즉, MediaStreamAudioSourceNode는 마이크에서 받은 실시간 오디오 데이터를 가져오고,
         // AnalyserNode는 그 데이터를 실시간으로 분석하여, 주파수 정보 등을 얻을 수 있게 된다.

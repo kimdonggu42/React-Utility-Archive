@@ -8,8 +8,11 @@ const port = 8080;
 
 // 같은 서버에서 http, webSocket 둘 다 작동(http 서버 위에 ws 서버를 생성하여 http protocol과 ws connection 지원)
 // localhost는 동일한 포트에서 http, webSocket request를 모두 처리할 수 있게 된다.
-const server = http.createServer(app); // http 서버
-const wss = new WebSocketServer({ server }); // webSocket 서버
+// WebSocket 서버는 기본적으로 http.Server 객체 위에서 작동하기 때문에,
+// Express 앱을 http.createServer로 감싸고, 그 HTTP 서버 객체를 WebSocket 서버에 전달해야 한다.
+// http 서버(http 프로토콜과 websocket 프로토콜을 함께 사용하기 위해 http.createServer를 사용하여 http 서버를 생성)
+const server = http.createServer(app);
+const wss = new WebSocketServer({ app }); // webSocket 서버
 
 const browsers = []; // 연결된 소켓(접속해 있는 사용자, 브라우저) 배열
 
@@ -54,5 +57,5 @@ wss.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log('WebSocket server is running on port 8080');
+  console.log(`WebSocket server is running on port ${port}`);
 });

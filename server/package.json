@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "websocket": "nodemon websocket/index.js",
+    "webrtc": "nodemon webrtc/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

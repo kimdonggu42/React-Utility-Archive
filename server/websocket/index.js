@@ -1,4 +1,4 @@
-import http from 'http';
+import { createServer } from 'http';
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import { Buffer } from 'buffer';
@@ -12,7 +12,7 @@ const port = 8080;
 // Express 앱을 http.createServer로 감싸고, 그 HTTP 서버 객체를 WebSocket 서버에 전달해야 한다.
 // http 서버(http 프로토콜과 websocket 프로토콜을 함께 사용하기 위해 http.createServer를 사용하여 http 서버를 생성)
 // 직접적으로 http 모듈을 사용해야 하는 경우(예: socket.io, SPDY, HTTPS)가 아니면, app.listen() 함수를 사용하여 애플리케이션을 시작할 수 있다.
-const server = http.createServer(app);
+const server = createServer(app);
 const wss = new WebSocketServer({ app }); // webSocket 서버
 
 const browsers = []; // 연결된 소켓(접속해 있는 사용자, 브라우저) 배열

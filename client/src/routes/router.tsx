@@ -9,6 +9,7 @@ import ModalPage from '@/feature/modal/ModalPage';
 import AudioVisualizerPage from '@/feature/web-audio-api/AudioVisualizerPage';
 import SpeechRecognitionPage from '@/feature/speech-recognition/SpeechRecognitionPage';
 import WebSocketPage from '@/feature/websocket/WebSocketPage';
+import WebRtcPage from '@/feature/web-rtc/WebRtcPage';
 
 export const router = createBrowserRouter([
   {
@@ -46,5 +47,9 @@ export const router = createBrowserRouter([
   {
     path: 'websocket',
     element: <WebSocketPage />,
+  },
+  {
+    path: 'webrtc',
+    element: <WebRtcPage />,
   },
 ]);

@@ -9,6 +9,8 @@ enum ConnectionStatus {
 
 export default function WebRtcPage() {
   const [roomName, setRoomName] = useState<string>('');
+  const [rooms, setRooms] = useState<string[]>([]);
+  const [peopleCount, setPeopleCount] = useState<number>(0);
   const [isRoomJoin, setIsRoomJoin] = useState<boolean>(false);
   const [nickname, setNickname] = useState<string>('');
   const [isSettingNickname, setIsSettingNickname] = useState<boolean>(false);
@@ -45,17 +47,26 @@ export default function WebRtcPage() {
 
   useEffect(() => {
     if (socketRef.current) {
-      socketRef.current.on('welcome', (user) =>
+      socketRef.current.on('welcome', (user, newCount) => {
         setMessages((prevMessages) => [...prevMessages, `${user} joined`]),
-      );
+          setPeopleCount(newCount);
+      });
 
-      socketRef.current.on('bye', (left) =>
-        setMessages((prevMessages) => [...prevMessages, `${left} left`]),
-      );
+      socketRef.current.on('bye', (left, newCount) => {
+        setMessages((prevMessages) => [...prevMessages, `${left} left`]), setPeopleCount(newCount);
+      });
 
       socketRef.current.on('new_message', (msg) =>
         setMessages((prevMessages) => [...prevMessages, msg]),
       );
+
+      socketRef.current.on('room_change', (rooms) => {
+        if (rooms.length > 0) {
+          setRooms(rooms);
+        } else {
+          setRooms([]);
+        }
+      });
     }
   }, []);
 
@@ -106,6 +117,7 @@ export default function WebRtcPage() {
           <p>{roomName}</p>
           <div>
             <h2>WebSocket 연결 상태: {connectionStatus}</h2>
+            <h2>참가 인원: {peopleCount}</h2>
             <div>
               <h3>받은 메시지:</h3>
               <ul>
@@ -138,16 +150,26 @@ export default function WebRtcPage() {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleRoomSubmit}>
-          <input
-            className='border border-black'
-            type='text'
-            placeholder='room name'
-            value={roomName}
-            onChange={handleRoomNameInput}
-          />
-          <button type='submit'>Enter room</button>
-        </form>
+        <div>
+          <div>
+            <h3>방 리스트:</h3>
+            <ul>
+              {rooms.map((room, index) => (
+                <li key={index}>{room}</li>
+              ))}
+            </ul>
+          </div>
+          <form onSubmit={handleRoomSubmit}>
+            <input
+              className='border border-black'
+              type='text'
+              placeholder='room name'
+              value={roomName}
+              onChange={handleRoomNameInput}
+            />
+            <button type='submit'>Enter room</button>
+          </form>
+        </div>
       )}
     </div>
   );

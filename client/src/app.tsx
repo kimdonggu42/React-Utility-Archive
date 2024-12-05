@@ -31,6 +31,10 @@ const categories = [
   },
   {
     pageNum: 8,
+    path: 'socketio',
+  },
+  {
+    pageNum: 9,
     path: 'webrtc',
   },
 ] as const;

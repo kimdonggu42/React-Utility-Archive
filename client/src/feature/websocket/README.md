@@ -109,6 +109,10 @@
 
 # 6. 웹 애플리케이션에서 웹소켓 구현하기
 
+- 인스턴스 메서드 : `send()`, `close()`
+
+- 이벤트 : `open`, `message`, `error`, `close`
+
 ### 클라이언트
 
 ```javascript
@@ -126,7 +130,11 @@ socket.onmessage = (e) => {
 };
 
 // 서버에 메시지 발송
+// WebSocket.send() 메서드는 지정된 데이터를 WebSocket 연결을 통해 서버로 전송하기 위해 대기열에 추가하며, 데이터 전송에 필요한 바이트 수만큼 bufferedAmount 값을 증가시킨다. 데이터가 전송될 수 없는 경우(예를 들어, 버퍼가 필요하지만 버퍼가 가득 찬 경우), 소켓은 자동으로 닫힌다. 연결이 CONNECTING 상태일 때 send()를 호출하면 브라우저는 예외를 발생시킨다. 연결이 CLOSING 또는 CLOSED 상태에서 send()를 호출하면 브라우저는 데이터를 무시한다.
 socket.send('Hello, server!');
+
+// WebSocket.close() 메서드는 WebSocket 연결 또는 연결 시도를 닫는다. 연결이 이미 CLOSED 상태인 경우, 이 메서드는 아무 작업도 하지 않는다.
+socket.close();
 ```
 
 ### 서버(Node.js)

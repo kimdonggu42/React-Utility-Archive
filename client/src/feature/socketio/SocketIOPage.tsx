@@ -40,34 +40,27 @@ export default function SocketIOPage() {
       console.log('❌Disconnected to Server');
     });
 
+    socket.on('welcome', (user, newCount) => {
+      setMessages((prevMessages) => [...prevMessages, `${user} joined`]), setPeopleCount(newCount);
+    });
+
+    socket.on('bye', (left, newCount) => {
+      setMessages((prevMessages) => [...prevMessages, `${left} left`]), setPeopleCount(newCount);
+    });
+
+    socket.on('new_message', (msg) => setMessages((prevMessages) => [...prevMessages, msg]));
+
+    socket.on('room_change', (rooms) => {
+      if (rooms.length > 0) {
+        setRooms(rooms);
+      } else {
+        setRooms([]);
+      }
+    });
+
     return () => {
       socket.close();
     };
-  }, []);
-
-  useEffect(() => {
-    if (socketRef.current) {
-      socketRef.current.on('welcome', (user, newCount) => {
-        setMessages((prevMessages) => [...prevMessages, `${user} joined`]),
-          setPeopleCount(newCount);
-      });
-
-      socketRef.current.on('bye', (left, newCount) => {
-        setMessages((prevMessages) => [...prevMessages, `${left} left`]), setPeopleCount(newCount);
-      });
-
-      socketRef.current.on('new_message', (msg) =>
-        setMessages((prevMessages) => [...prevMessages, msg]),
-      );
-
-      socketRef.current.on('room_change', (rooms) => {
-        if (rooms.length > 0) {
-          setRooms(rooms);
-        } else {
-          setRooms([]);
-        }
-      });
-    }
   }, []);
 
   const handleRoomNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {

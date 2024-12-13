@@ -16,8 +16,12 @@ io.on('connection', (socket) => {
   socket.on('join_room', (roomName, done) => {
     socket.join(roomName);
     done();
-    socket.to(roomName).emit('welcome');
+    socket.to(roomName).emit('join_room');
   });
+
+  socket.on('start_stream', (roomName) => socket.to(roomName).emit('start_stream'));
+
+  socket.on('offer', (offer, roomName) => socket.to(roomName).emit('offer', offer));
 });
 
 server.listen(port, () => console.log(`WebRtc server is running on port ${port}`));

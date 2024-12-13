@@ -34,6 +34,7 @@ export default function WebRTCPage() {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const myConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
     // socket.io는 백엔드 연결이 끊어지면 자동으로 재연결을 시도한다.
@@ -55,14 +56,30 @@ export default function WebRTCPage() {
       console.log('❌Disconnected to Server');
     });
 
-    socket.on('welcome', () => {
-      console.log('someone joined');
+    socket.on('join_room', () => console.log('someone joined'));
+
+    // 시그널링 프로세스
+    // 내 브라우저(Peer A)에서 실행되는 코드
+    socket.on('start_stream', async () => {
+      if (myConnectionRef.current) {
+        // createOffer()는 Offer SDP를 생성한다. 이 Offer에는 로컬 피어의 미디어 설정 정보(비디오/오디오 트랙, 코덱, 네트워크 주소 등)가 포함된다.
+        // setLocalDescription는 생성된 Offer SDP를 로컬 피어의 localDescription에 설정한다. 설정된 SDP는 시그널링 서버(WebSocket 등)를 통해 상대 피어에게 전송된다.
+        const offer = await myConnectionRef.current.createOffer();
+        myConnectionRef.current.setLocalDescription(offer);
+        if (socketRef.current) {
+          socketRef.current.emit('offer', offer, roomName);
+          console.log('send the offer');
+        }
+      }
     });
+
+    // 상대 브라우저(Peer B)에서 실행되는 코드
+    socket.on('offer', (offer) => console.log(offer));
 
     return () => {
       socket.close();
     };
-  }, []);
+  }, [roomName]);
 
   useEffect(() => {
     const getCameraList = async () => {
@@ -79,18 +96,30 @@ export default function WebRTCPage() {
   }, []);
 
   const startStream = async (deviceId?: string) => {
-    const constraintsWithDevice = {
-      ...constraints,
-      video: deviceId ? { deviceId: { exact: deviceId } } : true,
-    };
     try {
+      const constraintsWithDevice = {
+        ...constraints,
+        video: deviceId ? { deviceId: { exact: deviceId } } : true,
+      };
+
       if (mediaStreamRef.current) {
         const tracks = mediaStreamRef.current.getTracks();
         tracks.forEach((track) => track.stop());
       }
+      if (myConnectionRef.current) myConnectionRef.current.close();
+
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsWithDevice);
-      mediaStreamRef.current = mediaStream;
       if (videoRef.current) videoRef.current.srcObject = mediaStream;
+
+      const peerConnection = new RTCPeerConnection();
+      const tracks = mediaStream.getTracks();
+      tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
+
+      mediaStreamRef.current = mediaStream;
+      myConnectionRef.current = peerConnection;
+
+      if (socketRef.current) socketRef.current.emit('start_stream', roomName);
+
       setIsStreaming(true);
     } catch (err) {
       console.error(err);
@@ -99,14 +128,12 @@ export default function WebRTCPage() {
 
   const stopStream = () => {
     if (mediaStreamRef.current) {
-      const videoTracks = mediaStreamRef.current.getVideoTracks();
-      videoTracks.forEach((track) => track.stop());
-
-      const audioTracks = mediaStreamRef.current.getAudioTracks();
-      audioTracks.forEach((track) => track.stop());
-
-      setIsStreaming(false);
+      const tracks = mediaStreamRef.current.getTracks();
+      tracks.forEach((track) => track.stop());
+      mediaStreamRef.current = null;
     }
+    if (myConnectionRef.current) myConnectionRef.current.close();
+    setIsStreaming(false);
   };
 
   const handleCameraClick = () => {
@@ -136,9 +163,8 @@ export default function WebRTCPage() {
 
   const handleRoomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (socketRef.current && roomName.trim()) {
+    if (socketRef.current && roomName.trim())
       socketRef.current.emit('join_room', roomName, () => setIsRoomJoin(true));
-    }
   };
 
   return (

@@ -36,9 +36,16 @@
 
 - WebRTC는 특정 시그널링 프로토콜을 정의하지 않으므로, 개발자는 WebSocket, HTTP, XMPP, SIP 등 다양한 방법으로 시그널링을 구현할 수 있다. 시그널링 서버는 이를 통해 각 브라우저의 정보를 상대방에게 전달하며, 이를 바탕으로 peer-to-peer 연결이 설정된다. 연결이 완료되면 브라우저 간 실시간 미디어 데이터는 직접 전송되며, 서버는 이 과정에 관여하지 않는다. 즉, 시그널링 서버는 초기 연결 설정에 필요한 정보를 교환하는 중개자 역할만 수행한다. 결론적으로, 시그널링 서버는 피어 간의 초기 연결 설정을 지원하고, 이후 브라우저 간의 직접 통신 경로를 통해 실시간 데이터 전송이 가능해진다.
 
-  <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/aff6f92f-ad1a-4906-8913-1b2e03b91e31">
+> #### 시그널링 프로세스
+>
+> 1. A 피어는 `createOffer()`를 호출해 Offer SDP를 생성하고, `setLocalDescription(offer)`으로 로컬 SDP를 설정한 뒤, 시그널링 서버를 통해 B 피어에게 전달한다.
+> 2. B 피어는 전달받은 SDP를 `setRemoteDescription(offer)`으로 설정해 A 피어의 SDP를 확인한다.
+> 3. B 피어는 `createAnswer()`를 호출해 Answer SDP를 생성하고, `setLocalDescription(answer)`으로 로컬 SDP를 설정한 뒤, 이 SDP를 다시 시그널링 서버를 통해 A 피어에게 전달한다.
+> 4. A 피어는 전달받은 Answer SDP를 `setRemoteDescription(answer)`으로 설정해 B 피어의 SDP를 확인한다.
+>
+> <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/c358659b-6bde-4c5d-a7c5-cf9f1863a310">
 
-    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/c358659b-6bde-4c5d-a7c5-cf9f1863a310">
+  <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/aff6f92f-ad1a-4906-8913-1b2e03b91e31">
 
 ## 2. ICE
 

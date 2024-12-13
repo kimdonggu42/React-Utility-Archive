@@ -59,22 +59,32 @@ export default function WebRTCPage() {
     socket.on('join_room', () => console.log('someone joined'));
 
     // 시그널링 프로세스
-    // 내 브라우저(Peer A)에서 실행되는 코드
+    // 최초 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('start_stream', async () => {
       if (myConnectionRef.current) {
-        // createOffer()는 Offer SDP를 생성한다. 이 Offer에는 로컬 피어의 미디어 설정 정보(비디오/오디오 트랙, 코덱, 네트워크 주소 등)가 포함된다.
-        // setLocalDescription는 생성된 Offer SDP를 로컬 피어의 localDescription에 설정한다. 설정된 SDP는 시그널링 서버(WebSocket 등)를 통해 상대 피어에게 전송된다.
         const offer = await myConnectionRef.current.createOffer();
         myConnectionRef.current.setLocalDescription(offer);
-        if (socketRef.current) {
-          socketRef.current.emit('offer', offer, roomName);
-          console.log('send the offer');
-        }
+
+        if (socketRef.current) socketRef.current.emit('offer', offer, roomName);
       }
     });
 
     // 상대 브라우저(Peer B)에서 실행되는 코드
-    socket.on('offer', (offer) => console.log(offer));
+    // Peer A 에서 보낸 offer를 받아 remoteDescription로 Answer SDP 생성
+    socket.on('offer', async (offer) => {
+      if (myConnectionRef.current) {
+        myConnectionRef.current.setRemoteDescription(offer);
+        const answer = await myConnectionRef.current.createAnswer();
+        myConnectionRef.current.setLocalDescription(answer);
+
+        if (socketRef.current) socketRef.current.emit('answer', answer, roomName);
+      }
+    });
+
+    // 상대 브라우저(Peer B)에서 answer를 받은 후 내 브라우저(Peer A)에서 실행되는 코드
+    socket.on('answer', async (answer) => {
+      if (myConnectionRef.current) myConnectionRef.current.setRemoteDescription(answer);
+    });
 
     return () => {
       socket.close();

@@ -22,6 +22,8 @@ io.on('connection', (socket) => {
   socket.on('start_stream', (roomName) => socket.to(roomName).emit('start_stream'));
 
   socket.on('offer', (offer, roomName) => socket.to(roomName).emit('offer', offer));
+
+  socket.on('answer', (answer, roomName) => socket.to(roomName).emit('answer', answer));
 });
 
 server.listen(port, () => console.log(`WebRtc server is running on port ${port}`));

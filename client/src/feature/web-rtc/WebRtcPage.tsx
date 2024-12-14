@@ -33,6 +33,7 @@ export default function WebRTCPage() {
 
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const peerVideoRef = useRef<HTMLVideoElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const myConnectionRef = useRef<RTCPeerConnection | null>(null);
 
@@ -61,29 +62,46 @@ export default function WebRTCPage() {
     // 시그널링 프로세스
     // 최초 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('start_stream', async () => {
-      if (myConnectionRef.current) {
-        const offer = await myConnectionRef.current.createOffer();
-        myConnectionRef.current.setLocalDescription(offer);
-
-        if (socketRef.current) socketRef.current.emit('offer', offer, roomName);
+      try {
+        if (socketRef.current && myConnectionRef.current) {
+          const offer = await myConnectionRef.current.createOffer();
+          await myConnectionRef.current.setLocalDescription(offer);
+          socketRef.current.emit('offer', offer, roomName);
+        }
+      } catch (err) {
+        console.error(err);
       }
     });
 
     // 상대 브라우저(Peer B)에서 실행되는 코드
-    // Peer A 에서 보낸 offer를 받아 remoteDescription로 Answer SDP 생성
     socket.on('offer', async (offer) => {
-      if (myConnectionRef.current) {
-        myConnectionRef.current.setRemoteDescription(offer);
-        const answer = await myConnectionRef.current.createAnswer();
-        myConnectionRef.current.setLocalDescription(answer);
-
-        if (socketRef.current) socketRef.current.emit('answer', answer, roomName);
+      try {
+        if (socketRef.current && myConnectionRef.current) {
+          await myConnectionRef.current.setRemoteDescription(offer);
+          const answer = await myConnectionRef.current.createAnswer();
+          await myConnectionRef.current.setLocalDescription(answer);
+          socketRef.current.emit('answer', answer, roomName);
+        }
+      } catch (err) {
+        console.error('Offer 처리 중 에러 발생:', err);
       }
     });
 
     // 상대 브라우저(Peer B)에서 answer를 받은 후 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('answer', async (answer) => {
-      if (myConnectionRef.current) myConnectionRef.current.setRemoteDescription(answer);
+      try {
+        if (myConnectionRef.current) await myConnectionRef.current.setRemoteDescription(answer);
+      } catch (err) {
+        console.error('Answer 처리 중 에러 발생:', err);
+      }
+    });
+
+    socket.on('ice', async (ice) => {
+      try {
+        if (myConnectionRef.current) await myConnectionRef.current.addIceCandidate(ice);
+      } catch (err) {
+        console.error('ICE Candidate 추가 중 에러 발생:', err);
+      }
     });
 
     return () => {
@@ -115,8 +133,12 @@ export default function WebRTCPage() {
       if (mediaStreamRef.current) {
         const tracks = mediaStreamRef.current.getTracks();
         tracks.forEach((track) => track.stop());
+        mediaStreamRef.current = null;
       }
-      if (myConnectionRef.current) myConnectionRef.current.close();
+      if (myConnectionRef.current) {
+        myConnectionRef.current.close();
+        myConnectionRef.current = null;
+      }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsWithDevice);
       if (videoRef.current) videoRef.current.srcObject = mediaStream;
@@ -125,11 +147,21 @@ export default function WebRTCPage() {
       const tracks = mediaStream.getTracks();
       tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
 
+      peerConnection.onicecandidate = (e) => {
+        if (e.candidate && socketRef.current) socketRef.current.emit('ice', e.candidate, roomName);
+      };
+
+      peerConnection.ontrack = (e) => {
+        if (peerVideoRef.current) peerVideoRef.current.srcObject = e.streams[0];
+      };
+
       mediaStreamRef.current = mediaStream;
       myConnectionRef.current = peerConnection;
 
       if (socketRef.current) socketRef.current.emit('start_stream', roomName);
 
+      setIsCameraEnabled(true);
+      setIsAudioMuted(true);
       setIsStreaming(true);
     } catch (err) {
       console.error(err);
@@ -142,7 +174,10 @@ export default function WebRTCPage() {
       tracks.forEach((track) => track.stop());
       mediaStreamRef.current = null;
     }
-    if (myConnectionRef.current) myConnectionRef.current.close();
+    if (myConnectionRef.current) {
+      myConnectionRef.current.close();
+      myConnectionRef.current = null;
+    }
     setIsStreaming(false);
   };
 
@@ -183,21 +218,32 @@ export default function WebRTCPage() {
         <div>
           <p>{roomName}</p>
           <h2>WebSocket 연결 상태: {connectionStatus}</h2>
-          <video playsInline autoPlay width='400' height='400' ref={videoRef} />
+          <div>
+            <p>나</p>
+            <video playsInline autoPlay width='400' height='400' ref={videoRef} />
+          </div>
+          <div>
+            <p>상대방</p>
+            <video playsInline autoPlay width='400' height='400' ref={peerVideoRef} />
+          </div>
           <button onClick={isStreaming ? stopStream : () => startStream(selectedCameraId)}>
             {isStreaming ? 'Stop' : 'Start'}
           </button>
-          <select value={selectedCameraId} onChange={handleCameraChange}>
-            {cameraList.map((value) => (
-              <option key={value.deviceId} value={value.deviceId}>
-                {value.label}
-              </option>
-            ))}
-          </select>
-          <button onClick={handleCameraClick}>
-            {isCameraEnabled ? 'Camera Off' : 'Camera On'}
-          </button>
-          <button onClick={handleMuteClick}>{isAudioMuted ? 'Unmute' : 'Mute'}</button>
+          {isStreaming && (
+            <>
+              <select value={selectedCameraId} onChange={handleCameraChange}>
+                {cameraList.map((value) => (
+                  <option key={value.deviceId} value={value.deviceId}>
+                    {value.label}
+                  </option>
+                ))}
+              </select>
+              <button onClick={handleCameraClick}>
+                {isCameraEnabled ? 'Camera Off' : 'Camera On'}
+              </button>
+              <button onClick={handleMuteClick}>{isAudioMuted ? 'Mute' : 'Unmute'}</button>
+            </>
+          )}
         </div>
       ) : (
         <div>

@@ -30,23 +30,6 @@
 
 # 3. WebRTC 아키텍쳐
 
-## 1. 시그널링
-
-- WebRTC 통신에서 시그널링 서버는 두 피어 간의 실시간 오디오 및 비디오 연결을 위해 초기 정보(offer) 교환을 중개하는 역할을 한다. 시그널링은 두 브라우저(피어)가 연결을 설정하는 데 필요한 SDP(세션 설명 프로토콜) 요청 및 응답, 후보 IP 주소, 네트워크 상태, 코덱 및 프로토콜 협상, 세션 시작 및 종료 정보 등을 교환하는 과정이다.
-
-- WebRTC는 특정 시그널링 프로토콜을 정의하지 않으므로, 개발자는 WebSocket, HTTP, XMPP, SIP 등 다양한 방법으로 시그널링을 구현할 수 있다. 시그널링 서버는 이를 통해 각 브라우저의 정보를 상대방에게 전달하며, 이를 바탕으로 peer-to-peer 연결이 설정된다. 연결이 완료되면 브라우저 간 실시간 미디어 데이터는 직접 전송되며, 서버는 이 과정에 관여하지 않는다. 즉, 시그널링 서버는 초기 연결 설정에 필요한 정보를 교환하는 중개자 역할만 수행한다. 결론적으로, 시그널링 서버는 피어 간의 초기 연결 설정을 지원하고, 이후 브라우저 간의 직접 통신 경로를 통해 실시간 데이터 전송이 가능해진다.
-
-> #### 시그널링 프로세스
->
-> 1. A 피어는 `createOffer()`를 호출해 Offer SDP를 생성하고, `setLocalDescription(offer)`으로 로컬 SDP를 설정한 뒤, 시그널링 서버를 통해 B 피어에게 전달한다.
-> 2. B 피어는 전달받은 SDP를 `setRemoteDescription(offer)`으로 설정해 A 피어의 SDP를 확인한다.
-> 3. B 피어는 `createAnswer()`를 호출해 Answer SDP를 생성하고, `setLocalDescription(answer)`으로 로컬 SDP를 설정한 뒤, 이 SDP를 다시 시그널링 서버를 통해 A 피어에게 전달한다.
-> 4. A 피어는 전달받은 Answer SDP를 `setRemoteDescription(answer)`으로 설정해 B 피어의 SDP를 확인한다.
->
-> <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/c358659b-6bde-4c5d-a7c5-cf9f1863a310">
-
-  <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/aff6f92f-ad1a-4906-8913-1b2e03b91e31">
-
 ## 2. ICE
 
 - ICE(Interactive Connectivity Establishment)는 NAT(Network Address Translation)와 방화벽을 통과하여 서로 다른 네트워크 환경에서 피어 간의 직접 연결을 설정하는 프로토콜이다. ICE는 피어 간의 최적의 연결 경로를 결정하기 위해 IP 주소와 포트를 포함한 후보들을 수집하고 교환한다. 이를 통해 한쪽 또는 양쪽 피어가 NAT 또는 방화벽 뒤에 있어도 직접 연결할 수 있다.
@@ -79,11 +62,28 @@
 
 ## 1. 사용자 미디어 수집
 
-- 사용자 미디어 컴포넌트는 웹캠이나 마이크와 같은 사용자 디바이스에서 오디오와 비디오를 캡처하여 미디어 스트림을 생성ㅇ한다.
+- 사용자 미디어 컴포넌트는 웹캠이나 마이크와 같은 사용자 디바이스에서 오디오와 비디오를 캡처하여 미디어 스트림을 생성한다.
 
-## 2. 시그널링 교환
+## 2. 시그널링
 
-- 시그널링 구성 요소는 연결을 설정하기 위해 피어 간의 시그널링 메시지 교환을 용이하게 한다. 여기에는 오퍼 및 응답 메시지 전송, ICE 후보 교환, 미디어 기능 협상 등이 포함된다.
+- WebRTC 통신에서 시그널링 서버는 두 피어 간의 실시간 오디오 및 비디오 연결을 위해 초기 정보(offer) 교환을 중개하는 역할을 한다. 시그널링은 두 브라우저(피어)가 연결을 설정하는 데 필요한 SDP(세션 설명 프로토콜) 요청 및 응답, 후보 IP 주소, 네트워크 상태, 코덱 및 프로토콜 협상, 세션 시작 및 종료 정보 등을 교환하는 과정이다.
+
+- WebRTC는 특정 시그널링 프로토콜을 정의하지 않으므로, 개발자는 WebSocket, HTTP, XMPP, SIP 등 다양한 방법으로 시그널링을 구현할 수 있다. 시그널링 서버는 이를 통해 각 브라우저의 정보를 상대방에게 전달하며, 이를 바탕으로 peer-to-peer 연결이 설정된다. 연결이 완료되면 브라우저 간 실시간 미디어 데이터는 직접 전송되며, 서버는 이 과정에 관여하지 않는다. 즉, 시그널링 서버는 초기 연결 설정에 필요한 정보를 교환하는 중개자 역할만 수행한다. 결론적으로, 시그널링 서버는 피어 간의 초기 연결 설정을 지원하고, 이후 브라우저 간의 직접 통신 경로를 통해 실시간 데이터 전송이 가능해진다.
+
+> ### 시그널링 프로세스
+>
+> 1. A 피어는 `createOffer()`를 호출해 Offer SDP를 생성하고, `setLocalDescription(offer)`으로 로컬 SDP를 설정한 뒤, 시그널링 서버를 통해 B 피어에게 전달한다.
+> 2. A 피어는 ICE Candidate를 수집하고, `onicecandidate` 이벤트를 통해 수집된 ICE Candidate를 시그널링 서버를 통해 B 피어에게 전달한다.
+> 3. B 피어는 전달받은 Offer SDP를 `setRemoteDescription(offer)`으로 설정해 A 피어의 SDP를 확인한다.
+> 4. B 피어는 `createAnswer()`를 호출해 Answer SDP를 생성하고, `setLocalDescription(answer)`으로 로컬 SDP를 설정한 뒤, 이 SDP를 시그널링 서버를 통해 A 피어에게 전달한다.
+> 5. B 피어는 ICE Candidate를 수집하고, `onicecandidate` 이벤트를 통해 수집된 ICE Candidate를 시그널링 서버를 통해 A 피어에게 전달한다.
+> 6. A 피어는 전달받은 Answer SDP를 `setRemoteDescription(answer)`으로 설정해 B 피어의 SDP를 확인한다.
+> 7. A 피어는 B 피어의 ICE Candidate를 수신하고, `addIceCandidate()`를 호출해 ICE Candidate를 추가한다.
+> 8. B 피어는 A 피어의 ICE Candidate를 수신하고, `addIceCandidate()`를 호출해 ICE Candidate를 추가한다.
+>
+>    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/c358659b-6bde-4c5d-a7c5-cf9f1863a310">
+>
+>    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/aff6f92f-ad1a-4906-8913-1b2e03b91e31">
 
 ## 3. NAT 순회
 

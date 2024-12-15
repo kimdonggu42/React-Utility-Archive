@@ -30,12 +30,15 @@ export default function WebRTCPage() {
   const [isRoomJoin, setIsRoomJoin] = useState<boolean>(false);
   const [roomName, setRoomName] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<string>('');
+  const [chatMessage, setChatMessage] = useState<string>('');
+  const [receivedMessages, setReceivedMessages] = useState<string[]>([]);
 
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const peerVideoRef = useRef<HTMLVideoElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const myConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const myDataChannelRef = useRef<RTCDataChannel | null>(null);
 
   useEffect(() => {
     // socket.io는 백엔드 연결이 끊어지면 자동으로 재연결을 시도한다.
@@ -63,7 +66,12 @@ export default function WebRTCPage() {
     // 최초 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('start_stream', async () => {
       try {
-        if (socketRef.current && myConnectionRef.current) {
+        if (socketRef.current && myConnectionRef.current && myDataChannelRef.current) {
+          // 메시지 수신 이벤트 핸들러 설정
+          myDataChannelRef.current.onmessage = (e) => {
+            setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
+          };
+
           const offer = await myConnectionRef.current.createOffer();
           await myConnectionRef.current.setLocalDescription(offer);
           socketRef.current.emit('offer', offer, roomName);
@@ -77,6 +85,16 @@ export default function WebRTCPage() {
     socket.on('offer', async (offer) => {
       try {
         if (socketRef.current && myConnectionRef.current) {
+          myConnectionRef.current.ondatachannel = (e) => {
+            // 상대방의 DataChannel 수신
+            const receiveChannel = e.channel;
+            myDataChannelRef.current = receiveChannel;
+
+            receiveChannel.onmessage = (e) => {
+              setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
+            };
+          };
+
           await myConnectionRef.current.setRemoteDescription(offer);
           const answer = await myConnectionRef.current.createAnswer();
           await myConnectionRef.current.setLocalDescription(answer);
@@ -153,6 +171,12 @@ export default function WebRTCPage() {
           { urls: 'stun:stun4.l.google.com:19302' },
         ],
       });
+      // 데이터 채널 생성(WebSocket과는 다르게 서버를 거치지 않기 때문에 지연이 매우 낮고 효율적이다)
+      const myDataChannel = peerConnection.createDataChannel('chat');
+      myDataChannelRef.current = myDataChannel;
+
+      myDataChannel.onopen = () => console.log('DataChannel 열림');
+      myDataChannel.onclose = () => console.log('DataChannel 닫힘');
 
       const tracks = mediaStream.getTracks();
       tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
@@ -222,6 +246,14 @@ export default function WebRTCPage() {
       socketRef.current.emit('join_room', roomName, () => setIsRoomJoin(true));
   };
 
+  const sendMessage = () => {
+    if (myDataChannelRef.current && chatMessage.trim()) {
+      myDataChannelRef.current.send(chatMessage);
+      setReceivedMessages((prev) => [...prev, `나: ${chatMessage}`]);
+      setChatMessage('');
+    }
+  };
+
   return (
     <div>
       {isRoomJoin ? (
@@ -239,6 +271,24 @@ export default function WebRTCPage() {
           <button onClick={isStreaming ? stopStream : () => startStream(selectedCameraId)}>
             {isStreaming ? 'Stop' : 'Start'}
           </button>
+          <div>
+            <h3>채팅</h3>
+            <div className='h-[100px] overflow-y-auto border border-black'>
+              {receivedMessages.map((msg, index) => (
+                <p key={index}>{msg}</p>
+              ))}
+            </div>
+            <div>
+              <input
+                type='text'
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                placeholder='메시지를 입력하세요...'
+                style={{ marginRight: '10px' }}
+              />
+              <button onClick={sendMessage}>전송</button>
+            </div>
+          </div>
           {isStreaming && (
             <>
               <select value={selectedCameraId} onChange={handleCameraChange}>
@@ -257,14 +307,6 @@ export default function WebRTCPage() {
         </div>
       ) : (
         <div>
-          {/* <div>
-            <h3>방 리스트:</h3>
-            <ul>
-              {rooms.map((room, index) => (
-                <li key={index}>{room}</li>
-              ))}
-            </ul>
-          </div> */}
           <form onSubmit={handleRoomSubmit}>
             <input
               className='border border-black'

@@ -18,7 +18,7 @@
 
 3. **데이터 교환**
 
-- WebRTC는 오디오 및 비디오 통신 외에도 RTCDataChannel 컴포넌트를 사용하여 실시간으로 데이터를 교환할 수 있다. 이 기능은 참가자 간의 파일, 문자 메시지 또는 기타 모든 유형의 정보를 공유하는 데 유용하다.
+- WebRTC는 오디오 및 비디오 통신 외에도 RTCDataChannel를 사용하여 실시간으로 데이터를 교환할 수 있다. 이 기능은 참가자 간의 파일, 문자 메시지 또는 기타 모든 유형의 정보를 공유하는 데 유용하다.
 
 4. **보안**
 
@@ -97,16 +97,14 @@
 
 - 피어 연결 구성 요소는 미디어 기능의 협상을 관리하고 피어 간의 연결을 설정하며 피어 간의 미디어 스트림 흐름을 처리한다. 연결이 설정되면 사용자는 오디오, 비디오 및 데이터 채널을 통해 실시간으로 커뮤니케이션할 수 있다.
 
-# 4. WebRTC의 Media Streams API
+# 4. WebRTC의 인터페이스
 
 - Media Capture and Streams API(일명 MediaStream API)는 오디오와 비디오 데이터를 웹 환경에서 실시간 스트리밍할 수 있도록 지원하는 WebRTC 관련 API이다. 이 API는 미디어 스트림 자체와 이를 구성하는 각 오디오, 비디오 트랙을 관리하고, 트랙 품질이나 형식에 대한 제한(Constraints)을 설정할 수 있으며, 비동기적 데이터 활용을 위한 성공, 오류 콜백 및 다양한 이벤트 처리를 위한 인터페이스와 메서드를 제공한다. 이를 통해 브라우저에서 실시간 미디어를 캡처, 처리, 전송하는 기능을 유연하고 안전하게 구현할 수 있다.
 
 - 아래 내용을 통해, WebRTC의 주요 구성 요소들은 다음과 같이 서로 연계된다.
 
   1. MediaDevices와 getUserMedia를 통해 로컬 기기의 카메라·마이크 스트림을 얻고
-
   2. MediaStream을 통해 이 미디어를 다루며
-
   3. RTCPeerConnection을 사용해 해당 스트림을 원격 피어에게 전송하거나 피어로부터 수신하고
   4. RTCDataChannel을 통해 추가적인 비미디어 데이터 교환이 가능해진다.
 
@@ -116,102 +114,17 @@
 
   > [MediaDevices MDN](https://developer.mozilla.org/ko/docs/Web/API/MediaDevices)
 
-### 1-1. MediaDevices.getUserMedia()
-
-- getUserMedia는 MediaDevices 인터페이스의 메서드로, 사용자의 오디오 및 비디오 입력 장치에 대한 접근을 요청하는 데 사용된다. 이 메서드는 사용자에게 마이크와 카메라에 접근할 수 있는 권한을 묻는 메시지를 표시하고 오디오 및 비디오 스트림이 포함된 MediaStream 객체를 반환한다. 반환된 MediaStream 객체는 비디오 태그나 RTCPeerConnection에 입력으로 활용 가능하다.
-
-  ```javascript
-  const getMedia = async (constraints) => {
-    const constraints = { audio: true, video: true };
-    let stream = null;
-
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-      /* use the stream */
-    } catch (err) {
-      /* handle the error */
-    }
-  };
-  ```
-
-### 1-2. MediaDevices.enumerateDevices()
-
-- enumerateDevices는 MediaDevices 인터페이스의 메서드로, 현재 시스템에 연결된 카메라, 마이크, 스피커 등 사용 가능한 오디오, 비디오 입출력 장치 목록을 조회하고, 해당 장치들의 정보를 담은 MediaDeviceInfo 객체 배열을 반환한다. 이 메서드는 장치 접근 권한을 직접 요청하지 않으며, 필요한 경우 getUserMedia를 통해 별도로 접근 권한을 획득할 수 있다.
-
-  ```javascript
-  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-    console.log('enumerateDevices()를 지원하지 않습니다.');
-    return;
-  }
-
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    devices.forEach((device) =>
-      console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`),
-    );
-  } catch (err) {
-    console.log(`${err.name}: ${err.message}`);
-  }
-  ```
-
 ## 2. MediaStream
 
 - MediaStream 인터페이스는 WebRTC 세션에서 송수신되는 오디오 및 비디오 스트림을 나타내며, 이를 통해 사용자는 자신의 디바이스(카메라, 마이크)에서 캡처한 미디어에 접근할 수 있다. MediaStream 객체는 하나 이상의 오디오, 비디오 트랙을 포함할 수 있으며, 각 트랙은 MediaStreamTrack의 인스턴스로 저장된다. 이 트랙들을 전송하기 전에 적절히 조작, 처리함으로써 미디어 스트림을 원하는 형태로 커스터마이징할 수 있다.
 
   > [MediaStream MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
 
-### 2-1. MediaStream.getTracks()
-
-- getTracks는 MediaStream 객체에 포함된 모든 오디오 및 비디오 트랙을 배열 형태로 반환하는 메서드로, 이를 통해 현재 스트림에 어떤 트랙들이 있는지 쉽게 파악하고 필요할 경우 특정 트랙을 조작하거나 제거할 수 있다. 반환된 MediaStreamTrack 배열을 활용하면 각 트랙에 대해 음소거(비활성화)하거나 해상도, 프레임레이트 등의 품질 설정을 변경하는 등 세밀한 제어가 가능하다.
-
-  ```javascript
-  try {
-    const constraints = { audio: true, video: true };
-    const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-    document.querySelector('video').srcObject = mediaStream;
-
-    // Stop the stream after 5 seconds
-    setTimeout(() => {
-      const tracks = mediaStream.getTracks();
-      tracks[0].stop();
-    }, 5000);
-  } catch (err) {
-    console.error(`${err.name}: ${err.message}`);
-  }
-  ```
-
-### 2-2. MediaStream.getAudioTracks
-
-- getAudioTracks는 MediaStream 객체에 포함된 모든 오디오 트랙을 배열 형태로 반환하는 메서드이다. 이 메서드는 장치 접근 권한을 별도로 요청하지 않으며, 이미 확보된 MediaStream 내에서만 호출할 수 있다. 반환된 트랙 배열을 활용하면 오디오 트랙을 활성화, 비활성화하거나, 필요한 경우 특정 오디오 트랙을 제거하는 등 개별 오디오 신호에 대한 세밀한 제어를 수행할 수 있다.
-
-### 2-3. MediaStream.getVideoTracks
-
-- getVideoTracks는 MediaStream 객체에 포함된 모든 비디오 트랙을 배열 형태로 반환하는 메서드이다. 이 메서드는 이미 획득한 MediaStream 내에서 호출 가능하며, 추가적인 장치 접근 권한 요청 없이 현재 보유하고 있는 비디오 트랙 정보에 접근할 수 있다. 반환된 비디오 트랙 배열을 활용하면 해상도, 프레임레이트, 밝기 등의 영상 품질 관련 설정을 조정하거나 특정 비디오 트랙을 제거하는 등, 개별 비디오 신호에 대한 정교한 관리와 제어를 수행할 수 있다.
-
 ## 3. MediaStreamTrack
 
 - MediaStreamTrack은 미디어 스트림 객체 내의 개별 오디오 또는 비디오 트랙을 나타낸다. 트랙을 추가, 제거 또는 음소거하여 오디오 및 비디오 데이터의 흐름을 제어할 수 있다. 트랙의 종류(오디오 또는 비디오), 활성화 상태 및 제약 조건과 같은 미디어 스트림 트랙의 속성에 액세스할 수 있다.
 
   > [MediaStreamTrack MDN](https://developer.mozilla.org/ko/docs/Web/API/MediaStreamTrack)
-
-### 3-1. MediaStreamTrack.stop()
-
-- MediaStreamTrack.stop는 MediaStreamTrack 객체의 메서드로, 현재 캡처되거나 재생 중인 오디오 또는 비디오 트랙을 중지하는 데 사용된다. 이 메서드를 호출하면 해당 트랙은 더 이상 미디어 데이터를 생성하지 않으며, MediaStream에서도 유효한 트랙으로 인식되지 않는다.
-
-  ```javascript
-  const stopStreamedVideo = (videoElem) => {
-    const stream = videoElem.srcObject;
-    const tracks = stream.getTracks();
-
-    tracks.forEach((track) => track.stop());
-
-    videoElem.srcObject = null;
-  };
-  ```
-
-### 3-2. MediaStreamTrack.enabled
-
-- MediaStreamTrack.enabled는 MediaStreamTrack 객체의 속성으로, 해당 트랙(오디오 혹은 비디오)이 활성화되어 있는지 여부를 나타내는 Boolean 값이다. 기본적으로 true로 설정되어 있으며, 이 값이 false로 변경되면 해당 트랙은 더 이상 오디오나 비디오 데이터를 전송하지 않아 "음소거" 상태와 유사한 동작을 하게 된다. 그러나 트랙 자체는 여전히 MediaStream에 포함되어 있어 재생 목록에서 제거되지 않으며, 언제든지 enabled 값을 다시 true로 되돌려 미디어 출력을 재개할 수 있다.
 
 ## 4. RTCPeerConnection
 
@@ -223,4 +136,43 @@
 
 - RTCDataChannel 인터페이스는 WebRTC를 통해 오디오나 비디오 스트림과는 별도로 텍스트, 파일, 바이너리 데이터와 같은 비미디어 데이터를 두 피어 간에 실시간으로 교환하기 위한 P2P 데이터 채널을 제공한다. 이를 통해 신뢰성과 순서 보장 여부 등을 설정하여 안정적이고 정교한 데이터 전송 방식을 구현할 수 있으며, 시그널링 과정을 통해 RTCPeerConnection 연결이 확립된 후 해당 데이터 채널을 생성·관리할 수 있다. RTCDataChannel을 활용하면 오디오, 비디오 스트림 전송과 함께 다양한 형태의 정보를 유연하고 효율적으로 공유함으로써 보다 풍부한 실시간 커뮤니케이션 경험을 제공할 수 있다.
 
-  > [RTCDataChannel MDN](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)
+### 1. DataChannel과 WebSocket 비교
+
+  <table>
+    <thead>
+      <tr>
+        <th>특징</th>
+        <th>DataChannel</th>
+        <th>WebSocket</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>연결 구조</td>
+        <td>P2P 기반 (브라우저 간 직접 연결)</td>
+        <td>클라이언트 ↔ 서버 연결</td>
+      </tr>
+      <tr>
+        <td>지연 시간</td>
+        <td>매우 낮음 (UDP 기반 가능)</td>
+        <td>상대적으로 높음 (TCP 기반)</td>
+      </tr>
+      <tr>
+        <td>신뢰성</td>
+        <td>선택적 (신뢰성 여부 설정 가능)</td>
+        <td>항상 신뢰성 보장</td>
+      </tr>
+      <tr>
+        <td>네트워크</td>
+        <td>STUN/TURN 서버를 통해 NAT 트래버설 필요</td>
+        <td>서버를 통해 직접 연결 가능</td>
+      </tr>
+      <tr>
+        <td>사용 사례</td>
+        <td>채팅, 파일 전송, 게임 동기화</td>
+        <td>일반적인 실시간 통신</td>
+      </tr>
+    </tbody>
+  </table>
+
+> [RTCDataChannel MDN](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)

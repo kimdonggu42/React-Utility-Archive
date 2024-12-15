@@ -143,7 +143,17 @@ export default function WebRTCPage() {
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsWithDevice);
       if (videoRef.current) videoRef.current.srcObject = mediaStream;
 
-      const peerConnection = new RTCPeerConnection();
+      const peerConnection = new RTCPeerConnection({
+        // 구글 STUN 서버(STUN 서버는 공용 IP 주소를 알려주는 서버다)
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+        ],
+      });
+
       const tracks = mediaStream.getTracks();
       tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
 

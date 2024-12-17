@@ -202,6 +202,7 @@ export default function WebRTCPage() {
     }
   };
 
+  // Offerer side
   const stopStream = () => {
     if (mediaStreamRef.current) {
       const tracks = mediaStreamRef.current.getTracks();

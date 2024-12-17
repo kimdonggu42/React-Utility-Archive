@@ -112,29 +112,168 @@
 
 - MediaDevices 인터페이스는 `navigator.mediaDevices`를 통해 접근할 수 있으며, 카메라, 마이크 공유 화면 등 현재 연결된 사용자의 미디어 입력 장치에 대한 접근을 제공한다. `getUserMedia()` 메서드를 통해 카메라/마이크 스트림을 요청할 수 있고, `enumerateDevices` 메서드를 사용하여 오디오 및 비디오 스트림 캡처를 위한 특정 장치에 대한 접근을 요청할 수 있다.
 
-  > [MediaDevices MDN](https://developer.mozilla.org/ko/docs/Web/API/MediaDevices)
+### 1-1. MediaDevices.getUserMedia()
+
+- `getUserMedia()`는 MediaDevices 인터페이스의 메서드로, 사용자의 오디오 및 비디오 입력 장치에 대한 접근을 요청하는 데 사용된다. 이 메서드는 사용자에게 마이크와 카메라에 접근할 수 있는 권한을 묻는 메시지를 표시하고 오디오 및 비디오 스트림이 포함된 MediaStream 객체를 반환한다. 반환된 MediaStream 객체는 비디오 태그나 RTCPeerConnection에 입력으로 활용 가능하다.
+
+  ```javascript
+  const getMedia = async (constraints) => {
+    const constraints = { audio: true, video: true };
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      /* use the stream */
+    } catch (err) {
+      /* handle the error */
+    }
+  };
+  ```
+
+### 1-2. MediaDevices.enumerateDevices()
+
+- `enumerateDevices()`는 MediaDevices 인터페이스의 메서드로, 현재 시스템에 연결된 카메라, 마이크, 스피커 등 사용 가능한 오디오, 비디오 입출력 장치 목록을 조회하고, 해당 장치들의 정보를 담은 MediaDeviceInfo 객체 배열을 반환한다. 이 메서드는 장치 접근 권한을 직접 요청하지 않으며, 필요한 경우 getUserMedia를 통해 별도로 접근 권한을 획득할 수 있다.
+
+  ```javascript
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+    console.log('enumerateDevices()를 지원하지 않습니다.');
+    return;
+  }
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    devices.forEach((device) =>
+      console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`),
+    );
+  } catch (err) {
+    console.log(`${err.name}: ${err.message}`);
+  }
+  ```
+
+> [MediaDevices MDN](https://developer.mozilla.org/ko/docs/Web/API/MediaDevices)
 
 ## 2. MediaStream
 
 - MediaStream 인터페이스는 WebRTC 세션에서 송수신되는 오디오 및 비디오 스트림을 나타내며, 이를 통해 사용자는 자신의 디바이스(카메라, 마이크)에서 캡처한 미디어에 접근할 수 있다. MediaStream 객체는 하나 이상의 오디오, 비디오 트랙을 포함할 수 있으며, 각 트랙은 MediaStreamTrack의 인스턴스로 저장된다. 이 트랙들을 전송하기 전에 적절히 조작, 처리함으로써 미디어 스트림을 원하는 형태로 커스터마이징할 수 있다.
 
-  > [MediaStream MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
+### 2-1. MediaStream.getTracks()
+
+- `getTracks()`는 MediaStream 객체에 포함된 모든 오디오 및 비디오 트랙을 배열 형태로 반환하는 메서드로, 이를 통해 현재 스트림에 어떤 트랙들이 있는지 쉽게 파악하고 필요할 경우 특정 트랙을 조작하거나 제거할 수 있다. 반환된 MediaStreamTrack 배열을 활용하면 각 트랙에 대해 음소거(비활성화)하거나 해상도, 프레임레이트 등의 품질 설정을 변경하는 등 세밀한 제어가 가능하다.
+
+  ```javascript
+  try {
+    const constraints = { audio: true, video: true };
+    const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+    document.querySelector('video').srcObject = mediaStream;
+    // Stop the stream after 5 seconds
+    setTimeout(() => {
+      const tracks = mediaStream.getTracks();
+      tracks[0].stop();
+    }, 5000);
+  } catch (err) {
+    console.error(`${err.name}: ${err.message}`);
+  }
+  ```
+
+### 2-2. MediaStream.getAudioTracks()
+
+- `getAudioTracks()`는 MediaStream 객체에 포함된 모든 오디오 트랙을 배열 형태로 반환하는 메서드이다. 이 메서드는 장치 접근 권한을 별도로 요청하지 않으며, 이미 확보된 MediaStream 내에서만 호출할 수 있다. 반환된 트랙 배열을 활용하면 오디오 트랙을 활성화, 비활성화하거나, 필요한 경우 특정 오디오 트랙을 제거하는 등 개별 오디오 신호에 대한 세밀한 제어를 수행할 수 있다.
+
+### 2-3. MediaStream.getVideoTracks()
+
+- `getVideoTracks()`는 MediaStream 객체에 포함된 모든 비디오 트랙을 배열 형태로 반환하는 메서드이다. 이 메서드는 이미 획득한 MediaStream 내에서 호출 가능하며, 추가적인 장치 접근 권한 요청 없이 현재 보유하고 있는 비디오 트랙 정보에 접근할 수 있다. 반환된 비디오 트랙 배열을 활용하면 해상도, 프레임레이트, 밝기 등의 영상 품질 관련 설정을 조정하거나 특정 비디오 트랙을 제거하는 등, 개별 비디오 신호에 대한 정교한 관리와 제어를 수행할 수 있다.
+
+> [MediaStream MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream)
 
 ## 3. MediaStreamTrack
 
 - MediaStreamTrack은 미디어 스트림 객체 내의 개별 오디오 또는 비디오 트랙을 나타낸다. 트랙을 추가, 제거 또는 음소거하여 오디오 및 비디오 데이터의 흐름을 제어할 수 있다. 트랙의 종류(오디오 또는 비디오), 활성화 상태 및 제약 조건과 같은 미디어 스트림 트랙의 속성에 액세스할 수 있다.
 
-  > [MediaStreamTrack MDN](https://developer.mozilla.org/ko/docs/Web/API/MediaStreamTrack)
+### 3-1. MediaStreamTrack.stop()
+
+- `stop()`은 MediaStreamTrack 객체의 메서드로, 현재 캡처되거나 재생 중인 오디오 또는 비디오 트랙을 중지하는 데 사용된다. 이 메서드를 호출하면 해당 트랙은 더 이상 미디어 데이터를 생성하지 않으며, MediaStream에서도 유효한 트랙으로 인식되지 않는다.
+
+  ```javascript
+  const stopStreamedVideo = (videoElem) => {
+    const stream = videoElem.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach((track) => track.stop());
+    videoElem.srcObject = null;
+  };
+  ```
+
+### 3-2. MediaStreamTrack.enabled
+
+- `enabled`는 MediaStreamTrack 인터페이스의 속성으로, 해당 트랙(오디오 혹은 비디오)이 활성화되어 있는지 여부를 나타내는 Boolean 값이다. 기본적으로 true로 설정되어 있으며, 이 값이 false로 변경되면 해당 트랙은 더 이상 오디오나 비디오 데이터를 전송하지 않아 "음소거" 상태와 유사한 동작을 하게 된다. 그러나 트랙 자체는 여전히 MediaStream에 포함되어 있어 재생 목록에서 제거되지 않으며, 언제든지 enabled 값을 다시 true로 되돌려 미디어 출력을 재개할 수 있다.
+
+  ```javascript
+  // getUserMedia는 비동기적으로 처리됨
+  const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const videoTracks = mediaStream.getVideoTracks();
+  videoTracks.forEach((track) => (track.enabled = !track.enabled));
+  ```
+
+> [MediaStreamTrack MDN](https://developer.mozilla.org/ko/docs/Web/API/MediaStreamTrack)
 
 ## 4. RTCPeerConnection
 
 - RTCPeerConnection 인터페이스는 WebRTC 세션에서 두 피어 간 실시간 오디오, 비디오 및 데이터 전송을 위한 P2P 연결을 설정하고 관리하는 핵심 요소이다. 이를 통해 피어들은 네트워크를 통해 전달될 미디어 스트림 및 데이터 채널을 서로 교환할 수 있으며, 시그널링 과정을 통해 ICE 후보, SDP 등 필요한 연결 정보를 주고받는다. RTCPeerConnection을 활용하면 연결 과정에서 사용되는 코덱, 암호화 방식, 네트워크 환경 등을 협상할 수 있으며, 미디어 및 데이터 흐름을 원하는 형태로 관리하고 최적화함으로써 실시간 통신 환경을 유연하고 안정적으로 구성할 수 있다.
 
-  > [RTCPeerConnection MDN](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
+### 4-1. RTCPeerConnection.addTrack()
+
+- `addTrack()` 메서드는 RTCPeerConnection 인터페이스의 메서드로, 로컬 오디오나 비디오 트랙과 같은 미디어 스트림의 개별 트랙을 피어 연결에 추가해 P2P 통신으로 상대방에게 전송하는 메서드다. 이를 통해 특정 MediaStreamTrack 객체를 원격 피어에 전송할 수 있으며, 반환된 RTCRtpSender 객체를 활용해 트랙의 설정 및 제어도 가능하다. addTrack()은 RTCPeerConnection 연결이 시그널링 과정을 통해 확립된 후 사용되며, 상대방 피어는 `ontrack` 이벤트를 통해 수신된 트랙을 처리할 수 있다. 이를 통해 오디오 및 비디오와 같은 실시간 미디어 데이터를 효과적으로 교환하며, 실시간 커뮤니케이션 및 스트리밍 애플리케이션의 기반을 제공한다.
+
+  ```javascript
+  // 사용자의 비디오와 오디오 스트림을 가져와 원격 피어에 추가한다.
+  const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  const tracks = mediaStream.getTracks();
+  tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
+
+  //...
+
+  // 원격 피어에서 미디어 스트림(오디오 또는 비디오)을 수신하고, 해당 스트림을 비디오 요소에 할당
+  const peerConnection = new RTCPeerConnection();
+  peerConnection.ontrack = (e) => {
+    if (peerVideoRef.current) peerVideoRef.current.srcObject = e.streams[0];
+  };
+  ```
+
+### 4-2. RTCPeerConnection: icecandidate
+
+- `icecandidate`는 RTCPeerConnection 인터페이스에서 발생하는 이벤트로, ICE(Interactive Connectivity Establishment) 후보를 생성할 때 호출된다. 이 이벤트는 피어 간 P2P 연결을 설정하기 위해 네트워크 경로 후보를 탐색하는 과정에서 실행되며, 이벤트 객체의 candidate 속성을 통해 생성된 ICE 후보를 확인할 수 있다. 이를 상대방 피어에 전달하여 서로의 네트워크 경로를 확인하고 최적의 경로를 설정하게 된다. icecandidate 이벤트는 시그널링 과정을 통해 상대방과 ICE 후보를 교환하는 과정에서 중요한 역할을 하며, NAT나 방화벽을 우회하여 원활한 P2P 통신을 가능하게 한다. 이 과정을 통해 두 피어는 연결을 확립하고, 실시간 미디어 스트림이나 데이터 채널을 교환할 수 있는 기반을 제공한다.
+
+  ```javascript
+  const peerConnection = new RTCPeerConnection();
+  peerConnection.onicecandidate = (e) => socket.emit('ice', e.candidate);
+  ```
+
+> [RTCPeerConnection MDN](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection)
 
 ## 5. RTCDataChannel
 
 - RTCDataChannel 인터페이스는 WebRTC를 통해 오디오나 비디오 스트림과는 별도로 텍스트, 파일, 바이너리 데이터와 같은 비미디어 데이터를 두 피어 간에 실시간으로 교환하기 위한 P2P 데이터 채널을 제공한다. 이를 통해 신뢰성과 순서 보장 여부 등을 설정하여 안정적이고 정교한 데이터 전송 방식을 구현할 수 있으며, 시그널링 과정을 통해 RTCPeerConnection 연결이 확립된 후 해당 데이터 채널을 생성·관리할 수 있다. RTCDataChannel을 활용하면 오디오, 비디오 스트림 전송과 함께 다양한 형태의 정보를 유연하고 효율적으로 공유함으로써 보다 풍부한 실시간 커뮤니케이션 경험을 제공할 수 있다.
+
+### 5-1. RTCPeerConnection.createDataChannel()
+
+- createDataChannel()는 RTCPeerConnection 인터페이스의 메서드로, RTCPeerConnection을 통해 브라우저 간 P2P 데이터 전송을 가능하게 하며, 낮은 지연 시간과 직접 연결을 제공해 텍스트, JSON, 파일 같은 데이터를 실시간으로 송수신할 수 있다. 데이터 채널은 양방향 통신을 지원하며, 네트워크 지연을 최소화하는 직접 연결을 제공한다. 또한, 신뢰성 옵션을 설정할 수 있어 TCP처럼 순서와 신뢰성을 보장하거나, UDP처럼 비신뢰성 모드로 사용할 수도 있다.
+
+- 반면, WebSocket은 서버를 경유하는 클라이언트-서버 방식으로 항상 안정적인 연결과 신뢰성을 제공하지만, 중간 서버를 거치기 때문에 지연 시간이 상대적으로 높다. WebRTC 데이터 채널은 파일 전송, 게임 데이터 교환처럼 P2P 통신이 필요한 상황에 적합하며, WebSocket은 채팅, 실시간 알림처럼 서버 기반 통신이 필요한 애플리케이션에 적합하다. 다만, WebRTC는 NAT/방화벽 우회 및 시그널링과 같은 복잡한 설정이 필요해 구현이 까다로운 반면, WebSocket은 설정이 간단하고 빠르게 사용할 수 있다.
+
+  ```javascript
+  // configuration은 연결 설정(ex: STUN/TURN 서버 정보)을 포함하는 객체다.
+  const configuration = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' }, // STUN 서버
+      { urls: 'turn:example.com', username: 'user', credential: 'password' }, // TURN 서버
+    ],
+  };
+
+  const peerConnection = new RTCPeerConnection(configuration);
+  // 데이터 채널 생성
+  const channel = peerConnection.createDataChannel('chat');
+  // 데이터 채널을 생성할 때 메시지 전송하는 이벤트 onopen
+  channel.onopen = (e) => channel.send('Hi you!');
+  // 메시지를 수신하는 이벤트 onmessage
+  channel.onmessage = (event) => console.log(event.data);
+  ```
 
 ### 1. DataChannel과 WebSocket 비교
 

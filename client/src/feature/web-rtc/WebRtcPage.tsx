@@ -21,6 +21,17 @@ enum ConnectionStatus {
 
 const constraints: Constraints = { audio: true, video: true };
 
+// 구글 STUN 서버(STUN 서버는 공용 IP 주소를 알려주는 서버)
+const iceServers = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+  ],
+};
+
 export default function WebRTCPage() {
   const [isCameraEnabled, setIsCameraEnabled] = useState<boolean>(false);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
@@ -37,44 +48,38 @@ export default function WebRTCPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const peerVideoRef = useRef<HTMLVideoElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
-  const myConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const myDataChannelRef = useRef<RTCDataChannel | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const dataChannelRef = useRef<RTCDataChannel | null>(null);
 
   useEffect(() => {
     // socket.io는 백엔드 연결이 끊어지면 자동으로 재연결을 시도한다.
     const socket = io('http://localhost:8080');
     socketRef.current = socket;
 
-    socket.on('connect', () => {
-      setConnectionStatus(ConnectionStatus.CONNECTED);
-      console.log('✅Connected to Server');
-    });
-
-    socket.on('connect_error', (e) => {
-      setConnectionStatus(ConnectionStatus.ERROR);
-      console.error('Server Error:', e);
-    });
-
-    socket.on('disconnect', () => {
-      setConnectionStatus(ConnectionStatus.DISCONNECTED);
-      console.log('❌Disconnected to Server');
-    });
-
+    socket.on('connect', () => setConnectionStatus(ConnectionStatus.CONNECTED));
+    socket.on('connect_error', () => setConnectionStatus(ConnectionStatus.ERROR));
+    socket.on('disconnect', () => setConnectionStatus(ConnectionStatus.DISCONNECTED));
     socket.on('join_room', () => console.log('someone joined'));
 
     // 시그널링 프로세스
     // 최초 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('start_stream', async () => {
       try {
-        if (socketRef.current && myConnectionRef.current && myDataChannelRef.current) {
-          // 메시지 수신 이벤트 핸들러 설정
-          myDataChannelRef.current.onmessage = (e) => {
-            setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
-          };
+        if (peerConnectionRef.current) {
+          // 데이터 채널 생성(WebSocket과는 다르게 서버를 거치지 않기 때문에 지연이 매우 낮고 효율적이다)
+          const dataChannel = peerConnectionRef.current.createDataChannel('chat');
+          dataChannelRef.current = dataChannel;
 
-          const offer = await myConnectionRef.current.createOffer();
-          await myConnectionRef.current.setLocalDescription(offer);
-          socketRef.current.emit('offer', offer, roomName);
+          dataChannel.onopen = () => console.log('DataChannel 열림 (Peer A)');
+          dataChannel.onclose = () => console.log('DataChannel 닫힘 (Peer A)');
+
+          // 메시지 수신 이벤트 핸들러 설정
+          dataChannel.onmessage = (e) =>
+            setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
+
+          const offer = await peerConnectionRef.current.createOffer();
+          await peerConnectionRef.current.setLocalDescription(offer);
+          socket.emit('offer', offer, roomName);
         }
       } catch (err) {
         console.error(err);
@@ -84,21 +89,24 @@ export default function WebRTCPage() {
     // 상대 브라우저(Peer B)에서 실행되는 코드
     socket.on('offer', async (offer) => {
       try {
-        if (socketRef.current && myConnectionRef.current) {
-          myConnectionRef.current.ondatachannel = (e) => {
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.ondatachannel = (e) => {
             // 상대방의 DataChannel 수신
             const receiveChannel = e.channel;
-            myDataChannelRef.current = receiveChannel;
+            dataChannelRef.current = receiveChannel;
+
+            receiveChannel.onopen = () => console.log('DataChannel 열림 (Peer B)');
+            receiveChannel.onclose = () => console.log('DataChannel 닫힘 (Peer B)');
 
             receiveChannel.onmessage = (e) => {
               setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
             };
           };
 
-          await myConnectionRef.current.setRemoteDescription(offer);
-          const answer = await myConnectionRef.current.createAnswer();
-          await myConnectionRef.current.setLocalDescription(answer);
-          socketRef.current.emit('answer', answer, roomName);
+          await peerConnectionRef.current.setRemoteDescription(offer);
+          const answer = await peerConnectionRef.current.createAnswer();
+          await peerConnectionRef.current.setLocalDescription(answer);
+          socket.emit('answer', answer, roomName);
         }
       } catch (err) {
         console.error('Offer 처리 중 에러 발생:', err);
@@ -108,7 +116,7 @@ export default function WebRTCPage() {
     // 상대 브라우저(Peer B)에서 answer를 받은 후 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('answer', async (answer) => {
       try {
-        if (myConnectionRef.current) await myConnectionRef.current.setRemoteDescription(answer);
+        if (peerConnectionRef.current) await peerConnectionRef.current.setRemoteDescription(answer);
       } catch (err) {
         console.error('Answer 처리 중 에러 발생:', err);
       }
@@ -116,7 +124,9 @@ export default function WebRTCPage() {
 
     socket.on('ice', async (ice) => {
       try {
-        if (myConnectionRef.current) await myConnectionRef.current.addIceCandidate(ice);
+        if (peerConnectionRef.current) {
+          await peerConnectionRef.current.addIceCandidate(ice);
+        }
       } catch (err) {
         console.error('ICE Candidate 추가 중 에러 발생:', err);
       }
@@ -153,30 +163,15 @@ export default function WebRTCPage() {
         tracks.forEach((track) => track.stop());
         mediaStreamRef.current = null;
       }
-      if (myConnectionRef.current) {
-        myConnectionRef.current.close();
-        myConnectionRef.current = null;
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsWithDevice);
       if (videoRef.current) videoRef.current.srcObject = mediaStream;
 
-      const peerConnection = new RTCPeerConnection({
-        // 구글 STUN 서버(STUN 서버는 공용 IP 주소를 알려주는 서버다)
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' },
-          { urls: 'stun:stun3.l.google.com:19302' },
-          { urls: 'stun:stun4.l.google.com:19302' },
-        ],
-      });
-      // 데이터 채널 생성(WebSocket과는 다르게 서버를 거치지 않기 때문에 지연이 매우 낮고 효율적이다)
-      const myDataChannel = peerConnection.createDataChannel('chat');
-      myDataChannelRef.current = myDataChannel;
-
-      myDataChannel.onopen = () => console.log('DataChannel 열림');
-      myDataChannel.onclose = () => console.log('DataChannel 닫힘');
+      const peerConnection = new RTCPeerConnection(iceServers);
 
       const tracks = mediaStream.getTracks();
       tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
@@ -189,10 +184,10 @@ export default function WebRTCPage() {
         if (peerVideoRef.current) peerVideoRef.current.srcObject = e.streams[0];
       };
 
-      mediaStreamRef.current = mediaStream;
-      myConnectionRef.current = peerConnection;
-
       if (socketRef.current) socketRef.current.emit('start_stream', roomName);
+
+      mediaStreamRef.current = mediaStream;
+      peerConnectionRef.current = peerConnection;
 
       setIsCameraEnabled(true);
       setIsAudioMuted(true);
@@ -209,9 +204,9 @@ export default function WebRTCPage() {
       tracks.forEach((track) => track.stop());
       mediaStreamRef.current = null;
     }
-    if (myConnectionRef.current) {
-      myConnectionRef.current.close();
-      myConnectionRef.current = null;
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
     }
     setIsStreaming(false);
   };
@@ -243,13 +238,14 @@ export default function WebRTCPage() {
 
   const handleRoomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (socketRef.current && roomName.trim())
+    if (socketRef.current && roomName.trim()) {
       socketRef.current.emit('join_room', roomName, () => setIsRoomJoin(true));
+    }
   };
 
   const sendMessage = () => {
-    if (myDataChannelRef.current && chatMessage.trim()) {
-      myDataChannelRef.current.send(chatMessage);
+    if (dataChannelRef.current && chatMessage.trim()) {
+      dataChannelRef.current.send(chatMessage);
       setReceivedMessages((prev) => [...prev, `나: ${chatMessage}`]);
       setChatMessage('');
     }

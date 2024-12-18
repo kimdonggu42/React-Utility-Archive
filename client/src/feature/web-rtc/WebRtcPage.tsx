@@ -32,6 +32,28 @@ const iceServers = {
   ],
 };
 
+// 실행 흐름
+// 1. Peer A는 getUserMedia()를 호출해 로컬 오디오/비디오 스트림을 설정하고, RTCPeerConnection을 생성한 뒤 onicecandidate 이벤트 핸들러를 설정한다.
+//    Peer A는 start_stream 이벤트를 시그널링 서버를 통해 Peer B에게 전달한다.
+//    Console 출력: Peer A: emit start stream
+// 2. Peer B는 getUserMedia()를 호출해 로컬 오디오/비디오 스트림을 설정하고, RTCPeerConnection을 생성한 뒤 onicecandidate 이벤트 핸들러를 설정한다.
+//    Peer B는 start_stream 이벤트를 시그널링 서버를 통해 Peer A에게 전달한다.
+//    Console 출력: Peer B: emit start stream
+// 3. Peer A는 start_stream 이벤트를 수신하면 createDataChannel('chat')으로 DataChannel을 생성하고 이벤트 핸들러를 설정한다.
+//    이후 createOffer()를 호출해 Offer를 생성하고 setLocalDescription(offer)으로 로컬 SDP를 설정한 뒤, 시그널링 서버를 통해 Peer B에게 Offer를 전달한다.
+//    Console 출력: Peer A: start stream
+// 4. Peer B는 Offer를 수신하면 setRemoteDescription(offer)으로 설정하고, ondatachannel 이벤트를 통해 DataChannel을 수신하고 이벤트 핸들러를 설정한다.
+//    이후 createAnswer()를 호출해 Answer를 생성하고 setLocalDescription(answer)으로 로컬 SDP를 설정한 뒤, 시그널링 서버를 통해 Peer A에게 Answer를 전달한다.
+//    Console 출력: Peer B: offer
+// 5. Peer A는 Answer를 수신하면 setRemoteDescription(answer)으로 설정한다.
+//    Console 출력: Peer A: answer
+// 6. Peer A와 Peer B는 onicecandidate 이벤트를 통해 ICE Candidate를 수집하고, 시그널링 서버를 통해 상대방에게 전송한다.
+//    수신한 ICE Candidate는 addIceCandidate()를 호출해 PeerConnection에 추가된다.
+//    Console 출력: Peer A: emit ice candidate, add ice candidate, Peer B: add ice candidate, emit ice candidate
+// 7. Peer A와 Peer B는 P2P 연결이 확립되면 ontrack 이벤트를 통해 상대방의 오디오/비디오 트랙을 수신하고 화면에 출력한다.
+//    또한 DataChannel의 onopen 이벤트를 통해 채팅 기능이 활성화된다.
+//    Console 출력: on track, DataChannel 열림
+
 export default function WebRTCPage() {
   const [isCameraEnabled, setIsCameraEnabled] = useState<boolean>(false);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
@@ -52,80 +74,126 @@ export default function WebRTCPage() {
   const dataChannelRef = useRef<RTCDataChannel | null>(null);
 
   useEffect(() => {
-    // socket.io는 백엔드 연결이 끊어지면 자동으로 재연결을 시도한다.
     const socket = io('http://localhost:8080');
     socketRef.current = socket;
 
     socket.on('connect', () => setConnectionStatus(ConnectionStatus.CONNECTED));
     socket.on('connect_error', () => setConnectionStatus(ConnectionStatus.ERROR));
     socket.on('disconnect', () => setConnectionStatus(ConnectionStatus.DISCONNECTED));
-    socket.on('join_room', () => console.log('someone joined'));
+    socket.on('join_room', () => setReceivedMessages((prev) => [...prev, 'someone joined!']));
 
-    // 시그널링 프로세스
-    // 최초 내 브라우저(Peer A)에서 실행되는 코드
+    // 1. Offer/Answer 단계('start_stream' -> 'offer' -> 'answer')
+    // Offer와 Answer는 미디어 설정(트랙 정보, 코덱, 해상도 등)을 협상하는 과정이다.
+    // Peer A가 Offer를 보내고, Peer B가 이를 처리해 Answer를 반환하면, 양측은 미디어 설정 정보를 교환한 상태이다.
+    // 하지만 이 단계만으로는 연결에 필요한 네트워크 경로가 결정되지 않는다.
+
+    // 1-1. 최초 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('start_stream', async () => {
       try {
+        // DataChannel 생성 → Offer 생성 순서를 지켜야 한다.
+        // 이 순서를 지키지 않으면 DataChannel에 대한 정보가 Offer에 포함되지 않아
+        // 상대방(Peer B)이 ondatachannel 이벤트를 통해 채널을 수신하지 못한다.
         if (peerConnectionRef.current) {
-          // 데이터 채널 생성(WebSocket과는 다르게 서버를 거치지 않기 때문에 지연이 매우 낮고 효율적이다)
+          // 1. DataChannel 생성
+          // PeerConnection을 통해 데이터 전송용 DataChannel을 생성한다.
           const dataChannel = peerConnectionRef.current.createDataChannel('chat');
           dataChannelRef.current = dataChannel;
 
-          dataChannel.onopen = () => console.log('DataChannel 열림 (Peer A)');
-          dataChannel.onclose = () => console.log('DataChannel 닫힘 (Peer A)');
-
-          // 메시지 수신 이벤트 핸들러 설정
+          // 2. DataChannel 이벤트 핸들러 설정
+          // DataChannel이 열리거나 닫힐 때, 혹은 메시지를 수신할 때 이벤트를 처리한다.
+          dataChannel.onopen = () =>
+            setReceivedMessages((prev) => [...prev, 'DataChannel 열림 (Peer A)']);
+          dataChannel.onclose = () =>
+            setReceivedMessages((prev) => [...prev, 'DataChannel 닫힘 (Peer A)']);
           dataChannel.onmessage = (e) =>
             setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
 
+          // 3. Offer 생성 및 Local SDP(Session Description Protocol) 설정
+          // Peer A는 현재 PeerConnection에 설정된 트랙, DataChannel 등의 정보를 포함하는 Offer를 생성하고,
+          // 이를 Local SDP로 설정하여 상대방과 연결 준비를 한다.
           const offer = await peerConnectionRef.current.createOffer();
           await peerConnectionRef.current.setLocalDescription(offer);
+
+          // 4. Offer 전송
+          // 생성된 Offer를 서버를 통해 상대방(Peer B)에게 전송합니다.
           socket.emit('offer', offer, roomName);
+
+          console.log('start stream');
         }
       } catch (err) {
         console.error(err);
       }
     });
 
-    // 상대 브라우저(Peer B)에서 실행되는 코드
+    // 1-2. 상대 브라우저(Peer B)에서 실행되는 코드
     socket.on('offer', async (offer) => {
       try {
         if (peerConnectionRef.current) {
+          // 1. 상대방(Peer A)이 생성한 DataChannel 수신
+          // Peer B는 Peer A가 생성한 DataChannel을 감지하고 수신한다.
           peerConnectionRef.current.ondatachannel = (e) => {
-            // 상대방의 DataChannel 수신
             const receiveChannel = e.channel;
             dataChannelRef.current = receiveChannel;
 
-            receiveChannel.onopen = () => console.log('DataChannel 열림 (Peer B)');
-            receiveChannel.onclose = () => console.log('DataChannel 닫힘 (Peer B)');
-
-            receiveChannel.onmessage = (e) => {
+            // 2. DataChannel 이벤트 핸들러 설정
+            // DataChannel이 열리거나 닫힐 때, 혹은 메시지를 수신할 때 이벤트를 처리한다.
+            receiveChannel.onopen = () =>
+              setReceivedMessages((prev) => [...prev, 'DataChannel 열림 (Peer B)']);
+            receiveChannel.onclose = () =>
+              setReceivedMessages((prev) => [...prev, 'DataChannel 닫힘 (Peer B)']);
+            receiveChannel.onmessage = (e) =>
               setReceivedMessages((prev) => [...prev, `상대방: ${e.data}`]);
-            };
           };
 
+          // 3. Remote Offer 설정
+          // 상대방(Peer A)이 보낸 Offer를 Remote SDP로 설정하여 연결 준비를 한다.
           await peerConnectionRef.current.setRemoteDescription(offer);
+
+          // 4. Answer 생성 및 Local SDP 설정
+          // Peer B는 상대방(Peer A)의 Offer에 응답하는 Answer를 생성하고 Local SDP로 설정한다.
           const answer = await peerConnectionRef.current.createAnswer();
           await peerConnectionRef.current.setLocalDescription(answer);
+
+          // 5. Answer 전송
+          // 생성된 Answer를 서버를 통해 상대방(Peer A)에게 전송한다.
           socket.emit('answer', answer, roomName);
+
+          console.log('offer');
         }
       } catch (err) {
         console.error('Offer 처리 중 에러 발생:', err);
       }
     });
 
-    // 상대 브라우저(Peer B)에서 answer를 받은 후 내 브라우저(Peer A)에서 실행되는 코드
+    // 1-3. 상대 브라우저(Peer B)에서 answer를 받은 후 내 브라우저(Peer A)에서 실행되는 코드
+    // 이 시점까지는 서로의 연결 정보만 설정된 상태이며, 실제 네트워크 경로는 결정되지 않았다.
     socket.on('answer', async (answer) => {
       try {
-        if (peerConnectionRef.current) await peerConnectionRef.current.setRemoteDescription(answer);
+        // 1. Remote Answer 설정
+        // 상대방(Peer B)이 보낸 Answer를 Remote SDP로 설정하여 양측 연결을 완료한다.
+        if (peerConnectionRef.current) {
+          await peerConnectionRef.current.setRemoteDescription(answer);
+
+          console.log('answer');
+        }
       } catch (err) {
         console.error('Answer 처리 중 에러 발생:', err);
       }
     });
 
+    // 2. ICE Candidate 단계
+    // Offer/Answer 교환 후, 양측 브라우저는 ICE Candidate(네트워크 IP 주소와 포트 정보)를 수집한다.
+    // 각 브라우저는 onicecandidate 이벤트를 통해 ICE Candidate를 상대방에게 전송한다.
+    // 양측은 받은 ICE Candidate를 addIceCandidate를 사용해 설정하며, 최적의 네트워크 경로를 결정한다.
+    // 이 과정에서 연결 테스트를 수행하며 최종적으로 P2P 연결이 된다.
+
+    // 2-1. 상대방으로부터 ICE Candidate를 수신하면 PeerConnection에 추가한다.
     socket.on('ice', async (ice) => {
       try {
         if (peerConnectionRef.current) {
           await peerConnectionRef.current.addIceCandidate(ice);
+
+          console.log('add ice candidate');
         }
       } catch (err) {
         console.error('ICE Candidate 추가 중 에러 발생:', err);
@@ -177,14 +245,25 @@ export default function WebRTCPage() {
       tracks.forEach((track) => peerConnection.addTrack(track, mediaStream));
 
       peerConnection.onicecandidate = (e) => {
-        if (e.candidate && socketRef.current) socketRef.current.emit('ice', e.candidate, roomName);
+        if (e.candidate && socketRef.current) {
+          socketRef.current.emit('ice', e.candidate, roomName);
+          console.log('emit ice candidate');
+        }
       };
 
       peerConnection.ontrack = (e) => {
-        if (peerVideoRef.current) peerVideoRef.current.srcObject = e.streams[0];
+        if (peerVideoRef.current) {
+          peerVideoRef.current.srcObject = e.streams[0];
+
+          console.log('on track');
+        }
       };
 
-      if (socketRef.current) socketRef.current.emit('start_stream', roomName);
+      if (socketRef.current) {
+        socketRef.current.emit('start_stream', roomName);
+
+        console.log('emit start stream');
+      }
 
       mediaStreamRef.current = mediaStream;
       peerConnectionRef.current = peerConnection;
@@ -197,7 +276,6 @@ export default function WebRTCPage() {
     }
   };
 
-  // Offerer side
   const stopStream = () => {
     if (mediaStreamRef.current) {
       const tracks = mediaStreamRef.current.getTracks();

@@ -70,20 +70,19 @@
 
 - WebRTC는 특정 시그널링 프로토콜을 정의하지 않으므로, 개발자는 WebSocket, HTTP, XMPP, SIP 등 다양한 방법으로 시그널링을 구현할 수 있다. 시그널링 서버는 이를 통해 각 브라우저의 정보를 상대방에게 전달하며, 이를 바탕으로 peer-to-peer 연결이 설정된다. 연결이 완료되면 브라우저 간 실시간 미디어 데이터는 직접 전송되며, 서버는 이 과정에 관여하지 않는다. 즉, 시그널링 서버는 초기 연결 설정에 필요한 정보를 교환하는 중개자 역할만 수행한다. 결론적으로, 시그널링 서버는 피어 간의 초기 연결 설정을 지원하고, 이후 브라우저 간의 직접 통신 경로를 통해 실시간 데이터 전송이 가능해진다.
 
-> ### 시그널링 프로세스
->
-> 1. A 피어는 `createOffer()`를 호출해 Offer SDP를 생성하고, `setLocalDescription(offer)`으로 로컬 SDP를 설정한 뒤, 시그널링 서버를 통해 B 피어에게 전달한다.
-> 2. A 피어는 ICE Candidate를 수집하고, `onicecandidate` 이벤트를 통해 수집된 ICE Candidate를 시그널링 서버를 통해 B 피어에게 전달한다.
-> 3. B 피어는 전달받은 Offer SDP를 `setRemoteDescription(offer)`으로 설정해 A 피어의 SDP를 확인한다.
-> 4. B 피어는 `createAnswer()`를 호출해 Answer SDP를 생성하고, `setLocalDescription(answer)`으로 로컬 SDP를 설정한 뒤, 이 SDP를 시그널링 서버를 통해 A 피어에게 전달한다.
-> 5. B 피어는 ICE Candidate를 수집하고, `onicecandidate` 이벤트를 통해 수집된 ICE Candidate를 시그널링 서버를 통해 A 피어에게 전달한다.
-> 6. A 피어는 전달받은 Answer SDP를 `setRemoteDescription(answer)`으로 설정해 B 피어의 SDP를 확인한다.
-> 7. A 피어는 B 피어의 ICE Candidate를 수신하고, `addIceCandidate()`를 호출해 ICE Candidate를 추가한다.
-> 8. B 피어는 A 피어의 ICE Candidate를 수신하고, `addIceCandidate()`를 호출해 ICE Candidate를 추가한다.
->
->    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/c358659b-6bde-4c5d-a7c5-cf9f1863a310">
->
->    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/aff6f92f-ad1a-4906-8913-1b2e03b91e31">
+  > ### 시그널링 프로세스
+  >
+  > 1. Peer A는 로컬 오디오/비디오 스트림을 설정하고 P2P 연결을 위한 준비를 마친 뒤, 상대방에게 초기 연결 시작 신호를 전달한다.
+  > 2. Peer B는 로컬 오디오/비디오 스트림을 설정하고 P2P 연결을 위한 준비를 마친 뒤, 상대방에게 초기 연결 시작 신호를 전달한다.
+  > 3. Peer A는 상대방의 초기 연결 신호를 수신하면 데이터 통신 채널(RTCDataChannel)을 설정하고 연결 요청(Offer)을 전달한다.
+  > 4. Peer B는 연결 요청(Offer)을 수신하면 이를 설정하고, 데이터 통신 채널을 수신(RTCDataChannel)한 뒤 연결 응답(Answer)을 전달한다.
+  > 5. Peer A는 연결 응답(Answer)을 수신하고 이를 설정하여 연결 협상을 완료한다.
+  > 6. Peer A와 Peer B는 네트워크 경로 정보(ICE Candidate)를 수집하고 교환하며 이를 P2P 연결 설정에 추가한다.
+  > 7. Peer A와 Peer B는 P2P 연결이 확립되면 상대방의 데이터를 수신 및 출력하고, 설정된 채널을 통해 상호 통신을 활성화한다.
+  >
+  >    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/c358659b-6bde-4c5d-a7c5-cf9f1863a310">
+  >
+  >    <img width="100%" alt="signaling" src="https://github.com/user-attachments/assets/aff6f92f-ad1a-4906-8913-1b2e03b91e31">
 
 ## 3. NAT 순회
 
@@ -238,7 +237,7 @@
 
 ### 4-2. RTCPeerConnection: icecandidate
 
-- `icecandidate`는 RTCPeerConnection 인터페이스에서 발생하는 이벤트로, ICE(Interactive Connectivity Establishment) 후보를 생성할 때 호출된다. 이 이벤트는 피어 간 P2P 연결을 설정하기 위해 네트워크 경로 후보를 탐색하는 과정에서 실행되며, 이벤트 객체의 candidate 속성을 통해 생성된 ICE 후보를 확인할 수 있다. 이를 상대방 피어에 전달하여 서로의 네트워크 경로를 확인하고 최적의 경로를 설정하게 된다. icecandidate 이벤트는 시그널링 과정을 통해 상대방과 ICE 후보를 교환하는 과정에서 중요한 역할을 하며, NAT나 방화벽을 우회하여 원활한 P2P 통신을 가능하게 한다. 이 과정을 통해 두 피어는 연결을 확립하고, 실시간 미디어 스트림이나 데이터 채널을 교환할 수 있는 기반을 제공한다.
+- `icecandidate`는 RTCPeerConnection 인터페이스에서 발생하는 이벤트로, ICE(Interactive Connectivity Establishment) 후보(ICE Candidate는 네트워크 경로(IP 주소, 포트)를 나타낸다)를 생성할 때 호출된다. 이 이벤트는 피어 간 P2P 연결을 설정하기 위해 네트워크 경로 후보를 탐색하는 과정에서 실행되며, 이벤트 객체의 candidate 속성을 통해 생성된 ICE 후보를 확인할 수 있다. 이를 상대방 피어에 전달하여 서로의 네트워크 경로를 확인하고 최적의 경로를 설정하게 된다. icecandidate 이벤트는 시그널링 과정을 통해 상대방과 ICE 후보를 교환하는 과정에서 중요한 역할을 하며, NAT나 방화벽을 우회하여 원활한 P2P 통신을 가능하게 한다. 이 과정을 통해 두 피어는 연결을 확립하고, 실시간 미디어 스트림이나 데이터 채널을 교환할 수 있는 기반을 제공한다.
 
   ```javascript
   const peerConnection = new RTCPeerConnection();

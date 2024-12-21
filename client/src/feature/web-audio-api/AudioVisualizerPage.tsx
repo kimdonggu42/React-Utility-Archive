@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const totalBars = 11;
+const totalBars = 12;
 const barWidth = 15;
 const barSpacing = 10;
 const clientBarColor = '#60a5fa';
@@ -21,10 +21,12 @@ export default function AudioVisualizerPage() {
       if (!isAudioRecording || !analyserNodeRef.current || !canvasRef.current) return;
 
       const analyserNode = analyserNodeRef.current;
-      const clientCanvas = canvasRef.current;
-      const clientCanvasCtx = clientCanvas.getContext('2d');
+      const canvas = canvasRef.current;
+      const canvasCtx = canvas.getContext('2d');
 
-      if (clientCanvasCtx) {
+      if (canvasCtx) {
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
         // frequencyDataLength는 오디오 주파수 데이터(audioFrequencyData) 배열의 길이다.
         // 오디오 데이터를 분석할 때, FFT는 입력 신호를 여러 개의 주파수 구간(빈)으로 나누는데 frequencyBinCount는 이러한 구간(빈)의 개수를 나타낸다.
         // frequencyBinCount는 fftSize의 절반이다. FFT는 대칭적으로 결과를 반환하기 때문에, 실제 의미 있는 데이터는 절반만 필요하다. 그래서 나머지 절반은 중복된 값이므로 분석에 사용되지 않는다.
@@ -35,14 +37,8 @@ export default function AudioVisualizerPage() {
         // 각 인덱스는 특정 주파수 구간을 의미하고, 값(0~255)은 해당 주파수 구간의 진폭(음량)을 나타낸다.
         analyserNode.getByteFrequencyData(audioFrequencyData);
 
-        const canvasHeight = clientCanvas.height - barSpacing;
         // groupSize는 오디오 주파수 데이터(audioFrequencyData)를 막대 수(totalBars)에 맞게 그룹화할 크기이다. (예: 배열 길이가 1024고 막대가 11개라면 groupSize = 512 / 64 = 93)
         const groupSize = Math.floor(frequencyDataLength / totalBars);
-
-        clientCanvasCtx.fillStyle = '#ffffff';
-        clientCanvasCtx.fillRect(0, 0, clientCanvas.width, clientCanvas.height);
-
-        let barXCoordinate = 0;
 
         // 주파수 그룹별 평균 계산, 막대 하나당 여러 개의 주파수 데이터를 평균 내어 값을 부드럽게 만든다.
         for (let i = 0; i < totalBars; i++) {
@@ -54,29 +50,25 @@ export default function AudioVisualizerPage() {
           for (let j = groupStartIndex; j < groupEndIndex; j++) {
             groupDataSum += audioFrequencyData[j];
           }
-          const groupDataAverage = groupDataSum / groupSize;
+          const groupAmplitudeAverage = groupDataSum / groupSize;
 
           // normalizedBarHeight 한 그룹의 오디오 데이터들의 평균값을 캔버스 높이에 비례하여 변환한 원래 막대의 높이 값이다.
           // 오디오 데이터는 0~255 범위의 값을 가지므로 (average / 256)을 통해 비율을 맞추며, 이 값이 클수록 막대의 높이도 커지게 된다.
-          const normalizedBarHeight = (groupDataAverage * canvasHeight) / 256;
+          const normalizedBarHeight = (groupAmplitudeAverage * canvas.height) / 256;
           // diagonalBarHeightLimit 좌측 상단 부터 우측 하단으로 이어지는 대각선을 넘지 않는 각 막대 높이의 최대값이다.
-          const diagonalLimitBarHeight = canvasHeight - (canvasHeight / totalBars) * i;
+          const diagonalLimitBarHeight = canvas.height - (canvas.height / totalBars) * i;
           // 해당 막대의 원래 높이가 대각선 최대 높이를 넘지 않는다면 원래 높이를 사용하고,
           // 원래 높이가 대각선 최대값을 넘는다면 대각선 최대 높이로 제한한다.
           const limitedBarHeight = Math.min(normalizedBarHeight, diagonalLimitBarHeight);
 
-          clientCanvasCtx.fillStyle = clientBarColor;
-          clientCanvasCtx.fillRect(
-            barXCoordinate,
-            clientCanvas.height - limitedBarHeight,
-            barWidth,
-            limitedBarHeight,
-          );
+          const barXCoordinate = (barWidth + barSpacing) * i;
+          const barYCoordinate = canvas.height - limitedBarHeight;
 
-          // 다음 막대 위치로 이동
-          barXCoordinate += barWidth + barSpacing;
+          canvasCtx.fillStyle = clientBarColor;
+          canvasCtx.fillRect(barXCoordinate, barYCoordinate, barWidth, limitedBarHeight);
         }
       }
+
       animationFrameIdRef.current = requestAnimationFrame(visualizeClientAudio);
     };
     visualizeClientAudio();

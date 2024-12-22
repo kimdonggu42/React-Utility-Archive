@@ -65,6 +65,7 @@ export default function WebRTCPage() {
   const [connectionStatus, setConnectionStatus] = useState<string>('');
   const [chatMessage, setChatMessage] = useState<string>('');
   const [receivedMessages, setReceivedMessages] = useState<string[]>([]);
+  const [totalMember, setTotalMember] = useState<number>(0);
 
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -80,7 +81,10 @@ export default function WebRTCPage() {
     socket.on('connect', () => setConnectionStatus(ConnectionStatus.CONNECTED));
     socket.on('connect_error', () => setConnectionStatus(ConnectionStatus.ERROR));
     socket.on('disconnect', () => setConnectionStatus(ConnectionStatus.DISCONNECTED));
+
     socket.on('join_room', () => setReceivedMessages((prev) => [...prev, 'someone joined!']));
+    socket.on('room_member_count', (count) => setTotalMember(count));
+    socket.on('leave_room', () => setReceivedMessages((prev) => [...prev, 'someone leaved!']));
 
     // 1. Offer/Answer 단계('start_stream' -> 'offer' -> 'answer')
     // Offer와 Answer는 미디어 설정(트랙 정보, 코덱, 해상도 등)을 협상하는 과정이다.
@@ -201,7 +205,7 @@ export default function WebRTCPage() {
     });
 
     return () => {
-      socket.close();
+      socket.disconnect();
     };
   }, [roomName]);
 
@@ -254,14 +258,12 @@ export default function WebRTCPage() {
       peerConnection.ontrack = (e) => {
         if (peerVideoRef.current) {
           peerVideoRef.current.srcObject = e.streams[0];
-
           console.log('on track');
         }
       };
 
       if (socketRef.current) {
         socketRef.current.emit('start_stream', roomName);
-
         console.log('emit start stream');
       }
 
@@ -310,9 +312,8 @@ export default function WebRTCPage() {
     startStream(e.target.value);
   };
 
-  const handleRoomNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRoomNameInput = (e: React.ChangeEvent<HTMLInputElement>) =>
     setRoomName(e.target.value);
-  };
 
   const handleRoomSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -333,7 +334,8 @@ export default function WebRTCPage() {
     <div>
       {isRoomJoin ? (
         <div>
-          <p>{roomName}</p>
+          <p>방 이름: {roomName}</p>
+          <p>참여 인원: {totalMember}</p>
           <h2>WebSocket 연결 상태: {connectionStatus}</h2>
           <div>
             <p>나</p>

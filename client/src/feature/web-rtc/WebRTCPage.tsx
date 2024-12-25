@@ -95,6 +95,11 @@ export default function WebRTCPage() {
     // 1-1. 최초 내 브라우저(Peer A)에서 실행되는 코드
     socket.on('start_stream', async (isCaller) => {
       try {
+        // start_stream 이벤트는 브로드캐스트 방식으로 서버에서 방의 다른 사용자들에게만 전송된다.
+        // 따라서 방에 참가자가 1명뿐일 경우, start_stream 이벤트가 전달될 대상이 없으므로 연결이 시작되지 않는다.
+        // 방에 다른 사용자가 입장한 뒤 start 버튼을 클릭하면 start_stream 이벤트가 먼저 참가하여 start 버튼을 클릭했던 사용자에게 전달되어 Peer 연결이 시작된다.
+        // 이때 새로 입장한 사용자는 isCaller가 false인 상태로 서버에 start_stream 이벤트를 전송하기 때문에
+        // 먼저 참가하고 있던 사용자는 isCaller가 true이지만 서버로부터 전달받는 isCaller 값은 false가 된다.
         if (peerConnectionRef.current && !isCaller) {
           // 1. DataChannel 생성
           // PeerConnection을 통해 데이터 전송용 DataChannel을 생성한다.

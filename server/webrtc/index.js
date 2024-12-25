@@ -12,6 +12,9 @@ const io = new Server(server, {
   },
 });
 
+// 방별 참가자 수를 저장하는 객체
+const roomParticipants = {};
+
 // 클라이언트로 방 인원 수를 전송하는 함수
 const sendRoomMemberCount = (roomName) => {
   const room = io.sockets.adapter.rooms.get(roomName); // 방 정보 가져오기
@@ -22,12 +25,23 @@ const sendRoomMemberCount = (roomName) => {
 io.on('connection', (socket) => {
   socket.on('join_room', (roomName, done) => {
     socket.join(roomName);
-    done();
+
+    // 방 참가자 수 관리
+    if (!roomParticipants[roomName]) roomParticipants[roomName] = 0;
+
+    // 첫 번째 참가자 여부 확인
+    const isCaller = roomParticipants[roomName] === 0;
+    roomParticipants[roomName] += 1; // 참가자 수 증가
+
+    done(isCaller); // 클라이언트로 역할(isCaller) 전달
+
     socket.to(roomName).emit('join_room');
     sendRoomMemberCount(roomName); // 방 인원 수 업데이트
   });
 
-  socket.on('start_stream', (roomName) => socket.to(roomName).emit('start_stream'));
+  socket.on('start_stream', ({ roomName, isCaller }) =>
+    socket.to(roomName).emit('start_stream', isCaller),
+  );
 
   socket.on('offer', (offer, roomName) => socket.to(roomName).emit('offer', offer));
 
@@ -55,6 +69,15 @@ io.on('connection', (socket) => {
     rooms.forEach((roomName) => {
       socket.leave(roomName); // 소켓을 명시적으로 방에서 제거
       socket.to(roomName).emit('leave_room'); // 다른 사용자에게 방 나가기 알림
+
+      // 참가자 수 관리
+      if (roomParticipants[roomName]) {
+        roomParticipants[roomName] -= 1; // 참가자 수 감소
+        if (roomParticipants[roomName] <= 0) {
+          delete roomParticipants[roomName]; // 방이 비어 있으면 제거
+        }
+      }
+
       sendRoomMemberCount(roomName); // 방 인원 수 업데이트
     });
   });

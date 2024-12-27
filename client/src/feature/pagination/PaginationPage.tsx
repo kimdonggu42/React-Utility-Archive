@@ -1,27 +1,27 @@
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-
 import { useState, useEffect } from 'react';
-
 import Pagination from '@/feature/pagination/Pagination';
 import { Posts } from '@/types/dummyData';
-
-const paginationPageSize = 5;
+import { useMockServer } from '@/mocks/hooks/useMockServer';
 
 export default function PaginationPage() {
   const [posts, setPosts] = useState<Posts[]>([]);
   const [totalPageCount, setTotalPageCount] = useState<number>(0);
 
   const location = useLocation();
+  const mockWorker = useMockServer();
 
   const queryParams = new URLSearchParams(location.search);
   const page = queryParams.get('page');
-  const parse = queryParams.get('size');
+  const size = queryParams.get('size');
 
   useEffect(() => {
+    if (!mockWorker) return;
+
     const getPosts = async () => {
       try {
-        const res = await axios.get(`/posts?page=${page}&size=${paginationPageSize}`);
+        const res = await axios.get(`/posts?page=${page}&size=${size}`);
         setPosts(res.data.data);
         setTotalPageCount(res.data.totalPageCount);
       } catch (err) {
@@ -29,7 +29,7 @@ export default function PaginationPage() {
       }
     };
     getPosts();
-  }, [page, parse]);
+  }, [page, size, mockWorker]);
 
   return (
     <div className='flex h-screen flex-col justify-center'>
@@ -41,7 +41,11 @@ export default function PaginationPage() {
             </li>
           ))}
         </ul>
-        <Pagination currentPageNumber={Number(page)} totalPageCount={totalPageCount} />
+        <Pagination
+          currentPageNumber={Number(page)}
+          totalPageCount={totalPageCount}
+          size={Number(size) || 5}
+        />
       </div>
     </div>
   );

@@ -1,9 +1,8 @@
 import axios from 'axios';
-
 import { useState, useRef, useEffect } from 'react';
-
 import { useInfiniteScroll } from '@/feature/infinite-scroll/useInfiniteScroll';
 import { Posts } from '@/types/dummyData';
+import { useMockServer } from '@/mocks/hooks/useMockServer';
 
 const infiniteScrollPageSize = 10;
 
@@ -14,11 +13,15 @@ export default function InfiniteScrollPage() {
 
   const pageRef = useRef<number>(1);
 
+  const mockWorker = useMockServer();
+
   const targetRef = useInfiniteScroll(() => {
     getPosts();
   });
 
   useEffect(() => {
+    if (!mockWorker) return;
+
     const getTotalPageCount = async () => {
       try {
         const res = await axios.get(`/posts?page=1&size=${infiniteScrollPageSize}`);
@@ -28,7 +31,7 @@ export default function InfiniteScrollPage() {
       }
     };
     getTotalPageCount();
-  }, []);
+  }, [mockWorker]);
 
   const getPosts = async () => {
     setLoading(true);

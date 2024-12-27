@@ -4,11 +4,12 @@ import { usePagination } from '@/feature/pagination/usePagination';
 interface PaginationProps {
   currentPageNumber: number;
   totalPageCount: number;
+  size: number;
 }
 
 const visiblePageCount = 5;
 
-export default function Pagination({ currentPageNumber, totalPageCount }: PaginationProps) {
+export default function Pagination({ currentPageNumber, totalPageCount, size }: PaginationProps) {
   const {
     visiblePageNumbers,
     showPreviousEllipsis,
@@ -22,7 +23,7 @@ export default function Pagination({ currentPageNumber, totalPageCount }: Pagina
       <ul className='flex flex-row items-center gap-1'>
         {showPreviousPageButton && (
           <li>
-            <Link to={`/pagination?page=${currentPageNumber - 1}&parse=5`}>prev</Link>
+            <Link to={`/pagination?page=${currentPageNumber - 1}&size=${size}`}>prev</Link>
           </li>
         )}
         {showPreviousEllipsis && <li>...</li>}
@@ -31,7 +32,7 @@ export default function Pagination({ currentPageNumber, totalPageCount }: Pagina
             key={visiblePageNumber}
             className={`${visiblePageNumber === currentPageNumber && 'rounded-lg border-2'}`}
           >
-            <Link className='p-3' to={`/pagination?page=${visiblePageNumber}&parse=5`}>
+            <Link className='p-3' to={`/pagination?page=${visiblePageNumber}&size=${size}`}>
               {visiblePageNumber}
             </Link>
           </li>
@@ -39,7 +40,7 @@ export default function Pagination({ currentPageNumber, totalPageCount }: Pagina
         {showNextEllipsis && <li>...</li>}
         {showNextPageButton && (
           <li>
-            <Link to={`/pagination?page=${currentPageNumber + 1}&parse=5`}>next</Link>
+            <Link to={`/pagination?page=${currentPageNumber + 1}&size=${size}`}>next</Link>
           </li>
         )}
       </ul>

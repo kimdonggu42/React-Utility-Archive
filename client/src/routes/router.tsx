@@ -7,10 +7,10 @@ import DebouncePage from '@/feature/debounce/DebouncePage';
 import ThrottlePage from '@/feature/throttle/ThrottlePage';
 import ModalPage from '@/feature/modal/ModalPage';
 import AudioVisualizerPage from '@/feature/web-audio/AudioVisualizerPage';
-import SpeechRecognitionPage from '@/feature/speech-recognition/SpeechRecognitionPage';
+import SpeechRecognitionPage from '@/feature/web-speech/SpeechRecognitionPage';
 import WebSocketPage from '@/feature/websocket/WebSocketPage';
 import SocketIOPage from '@/feature/socketio/SocketIOPage';
-import WebRTCPage from '@/feature/web-rtc/WebRTCPage';
+import WebRTCPage from '@/feature/webrtc/WebRTCPage';
 
 export const router = createBrowserRouter([
   {

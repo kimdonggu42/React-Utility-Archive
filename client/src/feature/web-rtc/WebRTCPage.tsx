@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Constraints {
   audio: boolean;
@@ -212,6 +212,16 @@ export default function WebRTCPage() {
 
     return () => {
       socket.disconnect();
+      if (mediaStreamRef.current) {
+        const tracks = mediaStreamRef.current.getTracks();
+        tracks.forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+      }
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+      setIsStreaming(false);
     };
   }, [roomName]);
 
@@ -229,81 +239,72 @@ export default function WebRTCPage() {
     getCameraList();
   }, []);
 
-  const startStream = async (deviceId?: string) => {
-    try {
-      const constraintsWithDevice = {
-        ...constraints,
-        video: deviceId ? { deviceId: { exact: deviceId } } : true,
-      };
-
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsWithDevice);
-      mediaStreamRef.current = mediaStream;
-
-      if (videoRef.current) videoRef.current.srcObject = mediaStream;
-
-      if (!peerConnectionRef.current) {
-        // 초기 PeerConnection 생성
-        const peerConnection = new RTCPeerConnection(iceServers);
-        peerConnectionRef.current = peerConnection;
-
-        peerConnection.onicecandidate = (e) => {
-          if (e.candidate && socketRef.current) {
-            socketRef.current.emit('ice', e.candidate, roomName);
-            console.log('emit ice candidate');
-          }
+  const startStream = useCallback(
+    async (deviceId?: string) => {
+      try {
+        console.log('run');
+        const constraintsWithDevice = {
+          ...constraints,
+          video: deviceId ? { deviceId: { exact: deviceId } } : true,
         };
 
-        peerConnection.ontrack = (e) => {
-          if (peerVideoRef.current) {
-            peerVideoRef.current.srcObject = e.streams[0];
-            console.log('on track');
+        const mediaStream = await navigator.mediaDevices.getUserMedia(constraintsWithDevice);
+        mediaStreamRef.current = mediaStream;
+
+        if (videoRef.current) videoRef.current.srcObject = mediaStream;
+
+        if (!peerConnectionRef.current) {
+          // 초기 PeerConnection 생성
+          const peerConnection = new RTCPeerConnection(iceServers);
+          peerConnectionRef.current = peerConnection;
+
+          peerConnection.onicecandidate = (e) => {
+            if (e.candidate && socketRef.current) {
+              socketRef.current.emit('ice', e.candidate, roomName);
+              console.log('emit ice candidate');
+            }
+          };
+
+          peerConnection.ontrack = (e) => {
+            if (peerVideoRef.current) {
+              peerVideoRef.current.srcObject = e.streams[0];
+              console.log('on track');
+            }
+          };
+
+          mediaStream.getTracks().forEach((track) => peerConnection.addTrack(track, mediaStream));
+
+          if (socketRef.current) {
+            socketRef.current.emit('start_stream', { roomName, isCaller });
+            console.log('emit start stream');
           }
-        };
+        } else {
+          // 이미 PeerConnection이 생성되어 있는 상태에서 카메라 변경 시
+          // WebRTC 연결을 끊지 않고 기존의 비디오 트랙을 새로운 트랙으로 교체
+          const [videoTrack] = mediaStream.getVideoTracks(); // 새로 선택한 카메라의 비디오 트랙
+          // getSenders()는 현재 RTCPeerConnection에서 모든 RTCRtpSender 객체를 반환한다.
+          // RTCRtpSender는 특정 트랙(비디오, 오디오 등)을 원격 피어로 전송하는 WebRTC 객체이다.
+          // 각 RTCRtpSender에는 트랙 정보(예: track.kind), 코덱 설정 등이 포함된다.
+          const senders = peerConnectionRef.current.getSenders();
 
-        mediaStream.getTracks().forEach((track) => peerConnection.addTrack(track, mediaStream));
-
-        if (socketRef.current) {
-          socketRef.current.emit('start_stream', { roomName, isCaller });
-          console.log('emit start stream');
+          // 모든 RTCRtpSender 중에서, 전송 중인 트랙의 종류(track.kind)가 video인 것을 찾는다.
+          // sender.track은 해당 RTCRtpSender에서 전송 중인 트랙을 나타낸다.
+          // 여기서 videoSender는 기존에 원격 피어로 비디오를 전송하고 있는 객체이다.
+          const videoSender = senders.find((sender) => sender.track?.kind === 'video');
+          // RTCRtpSender.replaceTrack()을 호출하여, 기존에 전송 중인 비디오 트랙을 새로 선택한 videoTrack으로 교체한다.
+          // 기존 연결(RTCPeerConnection)을 끊지 않고도 새로운 트랙을 적용할 수 있다.
+          if (videoSender) await videoSender.replaceTrack(videoTrack);
         }
-      } else {
-        // 이미 PeerConnection이 생성되어 있는 상태에서 카메라 변경 시
-        // WebRTC 연결을 끊지 않고 기존의 비디오 트랙을 새로운 트랙으로 교체
-        const [videoTrack] = mediaStream.getVideoTracks(); // 새로 선택한 카메라의 비디오 트랙
-        // getSenders()는 현재 RTCPeerConnection에서 모든 RTCRtpSender 객체를 반환한다.
-        // RTCRtpSender는 특정 트랙(비디오, 오디오 등)을 원격 피어로 전송하는 WebRTC 객체이다.
-        // 각 RTCRtpSender에는 트랙 정보(예: track.kind), 코덱 설정 등이 포함된다.
-        const senders = peerConnectionRef.current.getSenders();
 
-        // 모든 RTCRtpSender 중에서, 전송 중인 트랙의 종류(track.kind)가 video인 것을 찾는다.
-        // sender.track은 해당 RTCRtpSender에서 전송 중인 트랙을 나타낸다.
-        // 여기서 videoSender는 기존에 원격 피어로 비디오를 전송하고 있는 객체이다.
-        const videoSender = senders.find((sender) => sender.track?.kind === 'video');
-        // RTCRtpSender.replaceTrack()을 호출하여, 기존에 전송 중인 비디오 트랙을 새로 선택한 videoTrack으로 교체한다.
-        // 기존 연결(RTCPeerConnection)을 끊지 않고도 새로운 트랙을 적용할 수 있다.
-        if (videoSender) await videoSender.replaceTrack(videoTrack);
+        setIsCameraEnabled(true);
+        setIsAudioMuted(true);
+        setIsStreaming(true);
+      } catch (err) {
+        console.error(err);
       }
-
-      setIsCameraEnabled(true);
-      setIsAudioMuted(true);
-      setIsStreaming(true);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const stopStream = () => {
-    if (mediaStreamRef.current) {
-      const tracks = mediaStreamRef.current.getTracks();
-      tracks.forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    setIsStreaming(false);
-  };
+    },
+    [isCaller, roomName],
+  );
 
   const handleCameraClick = () => {
     if (mediaStreamRef.current) {
@@ -339,6 +340,7 @@ export default function WebRTCPage() {
       socketRef.current.emit('join_room', roomName, (callerStatus: boolean) => {
         setIsCaller(callerStatus);
         setIsRoomJoin(true);
+        startStream();
       });
     }
   };
@@ -403,12 +405,6 @@ export default function WebRTCPage() {
                 </button>
               </div>
             )}
-            <button
-              className={`h-12 w-full whitespace-nowrap rounded-md px-4 text-xl text-white ${isStreaming ? 'bg-red-500' : 'bg-blue-500'}`}
-              onClick={isStreaming ? stopStream : () => startStream(selectedCameraId)}
-            >
-              {isStreaming ? 'Stop' : 'Start'}
-            </button>
           </div>
           <div className='flex flex-col gap-y-2'>
             <div className='h-[100px] overflow-y-auto rounded-md border border-black p-2'>

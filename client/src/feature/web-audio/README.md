@@ -51,4 +51,6 @@
   gainNode.connect(audioContext.destination);
   ```
 
-    <img width="100%" alt="웹 오디오 작업 흐름" src="https://github.com/user-attachments/assets/af356f38-604f-443f-a66e-b7d5305c9394">
+  <img width="100%" alt="웹 오디오 작업 흐름" src="https://github.com/user-attachments/assets/af356f38-604f-443f-a66e-b7d5305c9394">
+
+  > [MDN: Web Audio API](https://developer.mozilla.org/ko/docs/Web/API/Web_Audio_API)

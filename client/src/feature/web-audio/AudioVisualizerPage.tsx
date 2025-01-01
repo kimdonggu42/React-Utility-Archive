@@ -37,10 +37,10 @@ export default function AudioVisualizerPage() {
         // 각 인덱스는 특정 주파수 구간을 의미하고, 값(0~255)은 해당 주파수 구간의 진폭(음량)을 나타낸다.
         analyserNode.getByteFrequencyData(audioFrequencyData);
 
-        // groupSize는 오디오 주파수 데이터(audioFrequencyData)를 막대 수(totalBars)에 맞게 그룹화할 크기이다. (예: 배열 길이가 1024고 막대가 11개라면 groupSize = 512 / 64 = 93)
+        // groupSize는 오디오 주파수 데이터(audioFrequencyData)를 막대 수(totalBars)에 맞게 그룹화할 크기이다. (ex: 배열 길이가 1024고 막대가 12개라면 groupSize = 1024 / 12 = 85)
         const groupSize = Math.floor(frequencyDataLength / totalBars);
 
-        // 주파수 그룹별 평균 계산, 막대 하나당 여러 개의 주파수 데이터를 평균 내어 값을 부드럽게 만든다.
+        // 주파수 그룹별 평균 계산, 막대 하나당 여러 개의 주파수 데이터를 하나의 주파수 데이터 그룹으로 압축한다.
         for (let i = 0; i < totalBars; i++) {
           // 각 그룹의 평균값 계산
           const groupStartIndex = i * groupSize;
@@ -50,22 +50,17 @@ export default function AudioVisualizerPage() {
           for (let j = groupStartIndex; j < groupEndIndex; j++) {
             groupDataSum += audioFrequencyData[j];
           }
-          const groupAmplitudeAverage = groupDataSum / groupSize;
 
-          // normalizedBarHeight 한 그룹의 오디오 데이터들의 평균값을 캔버스 높이에 비례하여 변환한 원래 막대의 높이 값이다.
+          const groupAmplitudeAverage = groupDataSum / groupSize;
+          // normalizedBarHeight은 한 그룹의 오디오 데이터들의 평균값을 캔버스 높이에 비례하여 변환한 원래 막대의 높이 값이다.
           // 오디오 데이터는 0~255 범위의 값을 가지므로 (average / 256)을 통해 비율을 맞추며, 이 값이 클수록 막대의 높이도 커지게 된다.
           const normalizedBarHeight = (groupAmplitudeAverage * canvas.height) / 256;
-          // diagonalBarHeightLimit 좌측 상단 부터 우측 하단으로 이어지는 대각선을 넘지 않는 각 막대 높이의 최대값이다.
-          const diagonalLimitBarHeight = canvas.height - (canvas.height / totalBars) * i;
-          // 해당 막대의 원래 높이가 대각선 최대 높이를 넘지 않는다면 원래 높이를 사용하고,
-          // 원래 높이가 대각선 최대값을 넘는다면 대각선 최대 높이로 제한한다.
-          const limitedBarHeight = Math.min(normalizedBarHeight, diagonalLimitBarHeight);
 
           const barXCoordinate = (barWidth + barSpacing) * i;
-          const barYCoordinate = canvas.height - limitedBarHeight;
+          const barYCoordinate = canvas.height - normalizedBarHeight;
 
           canvasCtx.fillStyle = clientBarColor;
-          canvasCtx.fillRect(barXCoordinate, barYCoordinate, barWidth, limitedBarHeight);
+          canvasCtx.fillRect(barXCoordinate, barYCoordinate, barWidth, normalizedBarHeight);
         }
       }
 

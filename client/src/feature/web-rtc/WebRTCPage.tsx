@@ -354,66 +354,102 @@ export default function WebRTCPage() {
   return (
     <div>
       {isRoomJoin ? (
-        <div>
-          <p>방 이름: {roomName}</p>
-          <p>참여 인원: {totalMember}</p>
-          <h2>WebSocket 연결 상태: {connectionStatus}</h2>
-          <div>
-            <p>나</p>
-            <video playsInline autoPlay width='400' height='400' ref={videoRef} />
+        <div className='flex flex-col gap-y-5 p-5'>
+          <div className='rounded-md border border-black p-2'>
+            <p>방 이름: {roomName}</p>
+            <p>참여 인원: {totalMember}</p>
+            <h2>WebSocket 연결 상태: {connectionStatus}</h2>
           </div>
-          <div>
-            <p>상대방</p>
-            <video playsInline autoPlay width='400' height='400' ref={peerVideoRef} />
+          <div className='flex flex-col gap-y-5 rounded-md border border-black p-2'>
+            <div className='flex flex-col gap-y-10 sm:flex-row sm:justify-center sm:gap-x-10'>
+              <div className='max-w-1/2'>
+                <p>나</p>
+                <video className='h-auto w-full rounded-md' playsInline autoPlay ref={videoRef} />
+              </div>
+              <div className='max-w-1/2'>
+                <p>상대방</p>
+                <video
+                  className='h-auto w-full rounded-md'
+                  playsInline
+                  autoPlay
+                  ref={peerVideoRef}
+                />
+              </div>
+            </div>
+            {isStreaming && (
+              <div className='flex gap-x-2'>
+                <select
+                  className='rounded-md border border-black px-2 py-1'
+                  value={selectedCameraId}
+                  onChange={handleCameraChange}
+                >
+                  {cameraList.map((value) => (
+                    <option key={value.deviceId} value={value.deviceId}>
+                      {value.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className={`h-8 whitespace-nowrap rounded-md px-2 text-white ${isCameraEnabled ? 'bg-red-500' : 'bg-blue-500'}`}
+                  onClick={handleCameraClick}
+                >
+                  {isCameraEnabled ? 'Camera Off' : 'Camera On'}
+                </button>
+                <button
+                  className={`h-8 whitespace-nowrap rounded-md px-2 text-white ${isAudioMuted ? 'bg-red-500' : 'bg-blue-500'}`}
+                  onClick={handleMuteClick}
+                >
+                  {isAudioMuted ? 'Mute' : 'Unmute'}
+                </button>
+              </div>
+            )}
+            <button
+              className={`h-12 w-full whitespace-nowrap rounded-md px-4 text-xl text-white ${isStreaming ? 'bg-red-500' : 'bg-blue-500'}`}
+              onClick={isStreaming ? stopStream : () => startStream(selectedCameraId)}
+            >
+              {isStreaming ? 'Stop' : 'Start'}
+            </button>
           </div>
-          <button onClick={isStreaming ? stopStream : () => startStream(selectedCameraId)}>
-            {isStreaming ? 'Stop' : 'Start'}
-          </button>
-          <div>
-            <h3>채팅</h3>
-            <div className='h-[100px] overflow-y-auto border border-black'>
+          <div className='flex flex-col gap-y-2'>
+            <div className='h-[100px] overflow-y-auto rounded-md border border-black p-2'>
               {receivedMessages.map((msg, index) => (
                 <p key={index}>{msg}</p>
               ))}
             </div>
-            <div>
+            <div className='flex items-center gap-x-1'>
               <input
+                className='h-10 w-full rounded-md border border-gray-400 px-2.5 focus:border-2 focus:border-blue-500 focus:outline-none'
                 type='text'
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                placeholder='메시지를 입력하세요...'
+                placeholder='메시지를 입력하세요'
                 style={{ marginRight: '10px' }}
               />
-              <button onClick={sendMessage}>전송</button>
+              <button
+                className='h-9 whitespace-nowrap rounded-md bg-blue-500 px-4 text-white'
+                onClick={sendMessage}
+              >
+                Send
+              </button>
             </div>
           </div>
-          {isStreaming && (
-            <>
-              <select value={selectedCameraId} onChange={handleCameraChange}>
-                {cameraList.map((value) => (
-                  <option key={value.deviceId} value={value.deviceId}>
-                    {value.label}
-                  </option>
-                ))}
-              </select>
-              <button onClick={handleCameraClick}>
-                {isCameraEnabled ? 'Camera Off' : 'Camera On'}
-              </button>
-              <button onClick={handleMuteClick}>{isAudioMuted ? 'Mute' : 'Unmute'}</button>
-            </>
-          )}
         </div>
       ) : (
-        <div>
-          <form onSubmit={handleRoomSubmit}>
+        <div className='flex h-screen items-center justify-center'>
+          <form className='flex items-center gap-x-2' onSubmit={handleRoomSubmit}>
             <input
-              className='border border-black'
+              className='h-10 w-full rounded-md border border-gray-400 px-2.5 text-lg focus:border-2 focus:border-blue-500 focus:outline-none'
               type='text'
               placeholder='room name'
               value={roomName}
               onChange={handleRoomNameInput}
             />
-            <button type='submit'>Enter room</button>
+            <button
+              className='h-9 whitespace-nowrap rounded-md bg-blue-500 px-2 text-lg text-white'
+              type='submit'
+            >
+              Enter room
+            </button>
           </form>
         </div>
       )}

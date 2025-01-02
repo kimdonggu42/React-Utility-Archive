@@ -44,7 +44,6 @@ export const useSpeechRecognition = (isActive: boolean) => {
 
       recognition.current.onresult = (e: SpeechRecognitionResultList) => {
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          console.log(e);
           const { transcript } = e.results[i][0];
           if (e.results[i].isFinal) setTranscript((prev) => prev + transcript);
         }

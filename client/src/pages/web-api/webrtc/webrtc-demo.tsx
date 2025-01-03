@@ -54,7 +54,7 @@ const iceServers = {
 //    또한 DataChannel의 onopen 이벤트를 통해 채팅 기능이 활성화된다.
 //    Console 출력: on track, DataChannel 열림
 
-export default function WebRTCPage() {
+export default function WebRTCDemo() {
   const [isCameraEnabled, setIsCameraEnabled] = useState<boolean>(false);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
   const [cameraList, setCameraList] = useState<InputDeviceInfo[]>([]);

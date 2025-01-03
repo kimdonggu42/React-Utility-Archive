@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Pagination from '@/feature/pagination/Pagination';
+import Pagination from '@/components/Pagination';
 import { Posts } from '@/types/dummyData';
 import { useMockServer } from '@/mocks/hooks/useMockServer';
 
-export default function PaginationPage() {
+export default function PaginationDemo() {
   const [posts, setPosts] = useState<Posts[]>([]);
   const [totalPageCount, setTotalPageCount] = useState<number>(0);
 

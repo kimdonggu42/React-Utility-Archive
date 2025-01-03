@@ -5,7 +5,7 @@ const barWidth = 15;
 const barSpacing = 10;
 const clientBarColor = '#60a5fa';
 
-export default function AudioVisualizerPage() {
+export default function AudioVisualizerDemo() {
   const [isAudioRecording, setIsAudioRecording] = useState<boolean>(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useSpeechRecognition } from '@/feature/web-speech/useSpeechRecognition';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
-export default function SpeechRecognitionPage() {
+export default function SpeechRecognitionDemo() {
   const [isActive, setIsActive] = useState<boolean>(false);
 
   const { transcript, startSpeechRecognition, stopSpeechRecognition } =

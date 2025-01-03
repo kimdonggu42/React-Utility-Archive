@@ -7,7 +7,7 @@ enum ConnectionStatus {
   ERROR = 'Error',
 }
 
-export default function SocketIOPage() {
+export default function SocketIODemo() {
   const [roomName, setRoomName] = useState<string>('');
   const [rooms, setRooms] = useState<string[]>([]);
   const [peopleCount, setPeopleCount] = useState<number>(0);

@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { useState, useRef, useEffect } from 'react';
-import { useInfiniteScroll } from '@/feature/infinite-scroll/useInfiniteScroll';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { Posts } from '@/types/dummyData';
 import { useMockServer } from '@/mocks/hooks/useMockServer';
 
 const infiniteScrollPageSize = 10;
 
-export default function InfiniteScrollPage() {
+export default function InfiniteScrollDemo() {
   const [posts, setPosts] = useState<Posts[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [totalPageCount, setTotalPageCount] = useState<number>(0);

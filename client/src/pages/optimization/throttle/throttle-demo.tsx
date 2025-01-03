@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useThrottle } from '@/feature/throttle/useThrottle';
+import { useThrottle } from '@/hooks/useThrottle';
 
-export default function ThrottlePage() {
+export default function ThrottleDemo() {
   const [numbers, setNumbers] = useState<number[]>([0, 0, 0, 0]);
 
   const throttle = useThrottle();

@@ -19,7 +19,7 @@ const serializedMessage = (type: string, payload: string) => {
   return JSON.stringify(msg);
 };
 
-export default function WebSocketPage() {
+export default function WebSocketDemo() {
   const [nickname, setNickname] = useState<string>('');
   const [isSettingNickname, setIsSettingNickname] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');

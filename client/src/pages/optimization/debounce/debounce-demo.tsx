@@ -9,7 +9,7 @@ export default function DebounceDemo() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
     debounce(() => {
-      alert('마지막으로 입력한지 2초가 지났습니다!');
+      alert('마지막으로 입력한지 2초가 지났습니다.');
     }, 2000);
   };
 

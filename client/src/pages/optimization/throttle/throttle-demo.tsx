@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useThrottle } from '@/hooks/useThrottle';
 
 export default function ThrottleDemo() {
+  const [clickCount, setClickCount] = useState<number>(0);
   const [numbers, setNumbers] = useState<number[]>([0, 0, 0, 0]);
 
   const throttle = useThrottle();
@@ -13,13 +14,14 @@ export default function ThrottleDemo() {
   };
 
   const handleResetNumbers = () => {
-    console.log('버튼 클릭');
+    setClickCount((prev) => prev + 1);
     throttle(() => resetNumbers(numbers), 2000);
   };
 
   return (
     <div className='flex h-screen items-center justify-center'>
       <div className='flex flex-col gap-y-5'>
+        <div>재설정 클릭 횟수: {clickCount}</div>
         <button className='bg-blue-300 p-1' onClick={handleResetNumbers}>
           재설정
         </button>

@@ -7,7 +7,7 @@ const options = {
   threshold: 1,
 } as const;
 
-export const useInfiniteScroll = (callback: () => void) => {
+export const useIntersectionObserver = (callback: () => void) => {
   const targetRef = useRef(null);
 
   useEffect(() => {

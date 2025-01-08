@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useState, useRef, useEffect } from 'react';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { Posts } from '@/types/dummyData';
 import { useMockServer } from '@/mocks/hooks/useMockServer';
 
@@ -15,7 +15,7 @@ export default function InfiniteScrollDemo() {
 
   const mockWorker = useMockServer();
 
-  const targetRef = useInfiniteScroll(() => {
+  const targetRef = useIntersectionObserver(() => {
     getPosts();
   });
 

@@ -1,8 +1,10 @@
-# 1. IntersectionObserver란?
+# 1. Intersection Observer API란?
 
-- IntersectionObserver는 특정 DOM 요소가 뷰포트나 지정된 컨테이너와 교차하는지 여부를 비동기적으로 감지하여 필요한 작업을 수행할 수 있는 API입니다.
+- Intersection Observer API는 웹 애플리케이션에서 특정 요소가 다른 요소와 교차할 때(화면에 표시될 때) 또는 특정 조건을 만족할 때 알림을 받을 수 있게 해주는 자바스크립트 API다. 이 API를 사용하면 스크롤이나 레이아웃 변경에 따라 발생하는 이벤트를 효율적으로 처리할 수 있어 성능을 최적화할 수 있다.
 
-- 주로 스크롤 이벤트나 다른 동적인 요소 변화에 반응하여, 페이지 성능을 최적화하고 불필요한 계산을 줄이는 데 사용된다. 예를 들어, 무한 스크롤, lazy loading 이미지, 비디오 플레이어 제어 등에서 활용된다.
+- 예를 들어, 이미지를 지연 로딩하거나, 애니메이션을 트리거하거나, 무한 스크롤 기능을 구현하는 데 유용하다. Intersection Observer는 브라우저의 레이아웃 엔진과 결합하여 이벤트 리스너 대신 동작하므로 성능 저하를 최소화할 수 있다.
+
+> [IntersectionObserver: Web Speech API](https://developer.mozilla.org/ko/docs/Web/API/Intersection_Observer_API)
 
 # 2. useIntersectionObserver 훅
 

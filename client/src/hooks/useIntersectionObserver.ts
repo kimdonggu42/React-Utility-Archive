@@ -1,4 +1,3 @@
-// 참고: MDN IntersectionObserver(https://developer.mozilla.org/ko/docs/Web/API/IntersectionObserver)
 import { useEffect, useRef } from 'react';
 
 const options = {
@@ -11,11 +10,10 @@ export const useIntersectionObserver = (callback: () => void) => {
   const targetRef = useRef(null);
 
   useEffect(() => {
-    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+    const handleIntersect = (entries: IntersectionObserverEntry[]) =>
       entries.forEach((entry) => {
         if (entry.isIntersecting) callback();
       });
-    };
     const observer = new IntersectionObserver(handleIntersect, options);
     const curTargetRef = targetRef.current;
 
@@ -28,8 +26,3 @@ export const useIntersectionObserver = (callback: () => void) => {
 
   return targetRef;
 };
-
-// 사용법
-// const topRef = useInfiniteScroll(() => {
-//   getNextPageMessages();
-// });

@@ -1,6 +1,6 @@
-# React Utility Library
+# React Utility Archive
 
-- 이 레포지토리는 학습과 기록, 재사용을 목적으로 만들어졌으며, React 애플리케이션 개발 시 자주 사용되는 커스텀 훅, UI 컴포넌트, Web API를 활용한 간단한 샘플 앱 등 다양한 템플릿들을 모아놓은 레포지토리입니다. 반복적으로 구현해야 하는 공통 기능들을 재사용 가능한 형태로 정리하여 개발 생산성을 높이고 코드 품질을 개선하는 것을 목표로 하며, 주기적으로 개선 작업을 진행하고 있습니다.
+- 이 레포지토리는 학습 목적과 더불어 React 애플리케이션 개발 시 자주 사용되는 커스텀 훅, UI 컴포넌트, Web API를 활용한 간단한 데모 앱 등 다양한 템플릿들을 모아놓은 레포지토리입니다. 반복적으로 구현해야 하는 공통 기능들을 재사용 가능한 형태로 정리하여 개발 생산성을 높이고 코드 품질을 개선하는 것을 목표로 합니다.
 
 ## 목차
 
@@ -30,42 +30,46 @@ npm run websocket // npm run + 실행하고자 하는 디렉토리명
 
 ```
 react-template/
-├─ client/                          # 프론트엔드 코드
-│  ├─ public/                       # 정적 파일
-│  ├─ src/                          # 소스 코드
-│  │  ├─ assets/                    # 이미지, 폰트 등 정적 파일
-│  │  ├─ feature/                   # 주요 기능별 모듈화된 폴더
-│  │  │  ├─ debounce/               # 디바운스
-│  │  │  ├─ infinite-scroll/        # 무한 스크롤
-│  │  │  ├─ modal/                  # 모달
-│  │  │  ├─ pagination/             # 페이지네이션
-│  │  │  ├─ socketio/               # Socket.IO를 활용한 통신
-│  │  │  ├─ speech-recognition/     # 음성 인식(Speech To Text)
-│  │  │  ├─ throttle/               # Throttle
-│  │  │  ├─ web-audio-api/          # 오디오 API 처리
-│  │  │  ├─ web-rtc/                # WebRTC 관련 기능
-│  │  │  └─ websocket/              # WebSocket 통신
-│  │  ├─ mocks/                     # Mock 데이터(MSW)
-│  │  ├─ routes/                    # 라우팅 설정
-│  │  ├─ types/                     # 타입스크립트 타입 정의
-│  │  ├─ app.tsx                    # 메인 React 컴포넌트
-│  │  ├─ main.tsx                   # React 진입점
-│  │  ├─ index.css                  # 전역 스타일
-│  │  └─ vite-env.d.ts              # Vite 환경 설정 타입 정의
-│  ├─ index.html                    # 메인 HTML 파일
-│  ├─ package.json                  # 프로젝트 의존성 설정
-│  ├─ vite.config.ts                # Vite 설정 파일
-│  ├─ tailwind.config.js            # Tailwind CSS 설정
-│  ├─ tsconfig.json                 # TypeScript 설정
-│  └─ README.md                     # 프로젝트 설명
+├─ client/                             # 프론트엔드 코드
+│  ├─ node_modules/                    # 프로젝트 의존성
+│  ├─ public/                          # 정적 파일
+│  ├─ src/                             # 소스 코드
+│  │  ├─ assets/                       # 이미지, 폰트 등 정적 파일
+│  │  ├─ components/                   # 공통 UI 컴포넌트
+│  │  ├─ hooks/                        # React 커스텀 훅
+│  │  ├─ mocks/                        # Mock 데이터 및 API 핸들러(MSW)
+│  │  ├─ pages/                        # 기능별 데모 페이지
+│  │  │  ├─ library/                   # 외부 라이브러리 관련
+│  │  │  │  ├─ socket.io/              # socket.io 데모 페이지
+│  │  │  ├─ ui/                        # UI 관련
+│  │  │  │  ├─ modal/                  # 모달 데모 페이지
+│  │  │  │  ├─ pagination/             # 페이지네이션 데모 페이지
+│  │  │  ├─ optimization/              # 최적화 커스텀 훅 데모 페이지
+│  │  │  │  ├─ debounce/               # 디바운스 데모 페이지
+│  │  │  │  ├─ throttle/               # 쓰로틀 데모 페이지
+│  │  │  ├─ web-api/                   # 웹 API 관련
+│  │  │  │  ├─ intersection-observer/  # 무한 스크롤 데모 페이지
+│  │  │  │  ├─ web-audio/              # 오디오 시각화 데모 페이지
+│  │  │  │  ├─ web-speech/             # speech to text 데모 페이지
+│  │  │  │  ├─ webrtc/                 # webrtc 데모 페이지
+│  │  │  │  ├─ websocket/              # websocket 데모 페이지
+│  │  ├─ types/                        # 공통 타입 정의
+│  │  ├─ app.tsx                       # 메인 React 컴포넌트
+│  │  ├─ index.css                     # 전역 스타일
+│  │  ├─ main.tsx                      # React 진입점
+│  │  └─ vite-env.d.ts                 # Vite 환경 설정 타입 정의
+│  ├─ package.json                     # 프로젝트 의존성 설정
+│  ├─ vite.config.ts                   # Vite 설정 파일
+│  ├─ tailwind.config.js               # Tailwind CSS 설정
+│  ├─ tsconfig.json                    # TypeScript 설정
+│  └─ README.md                        # 프로젝트 설명
 │
-└─ server/                          # 백엔드 코드
-   ├─ node_modules/                 # 서버 의존성
-   ├─ socketio/                     # Socket.IO 서버
-   ├─ webrtc/                       # WebRTC 서버 로직
-   ├─ websocket/                    # WebSocket 서버
-   ├─ .eslintrc.json                # ESLint 설정
-   └─ .prettier.json                # Prettier 코드 스타일 설정
+└─ server/                             # 백엔드 코드
+   ├─ node_modules/                    # 프로젝트 의존성
+   ├─ socketio/                        # Socket.IO 서버
+   ├─ webrtc/                          # WebRTC 서버
+   ├─ websocket/                       # WebSocket 서버
+   ├─ .package.json                    # 프로젝트 의존성 설정
 ```
 
 ## 3. 특징
@@ -74,7 +78,7 @@ react-template/
 
 - Server: 백엔드 코드로, 실시간 통신(WebSocket, WebRTC 등)과 데이터 처리를 지원합니다.
 
-### Client의 기능별 정리(Feature 디렉토리)
+### Client의 기능별 정리(Pages 디렉토리)
 
 - feature의 각 디렉토리 별로 간단히 테스트 해 볼 수 있는 page 컴포넌트가 존재 합니다.
 
@@ -122,7 +126,7 @@ react-template/
   }, 2000);
   ```
 
-### 디바운스를 테스트할 수 있는 컴포넌트 (DebouncePage.tsx)
+### 디바운스를 테스트할 수 있는 컴포넌트 (debounce-demo.tsx)
 
 - 입력 필드에 텍스트를 입력할 때, 입력이 끝난 후 일정 시간 동안 대기한 뒤에만 콜백(알림 메시지)이 실행되는 예제입니다.
 

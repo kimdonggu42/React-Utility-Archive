@@ -9,7 +9,6 @@ import ThrottleDemo from '@/pages/optimization/throttle/throttle-demo';
 import AudioVisualizerDemo from '@/pages/web-api/web-audio/audiovisualizer-demo';
 import SpeechRecognitionDemo from '@/pages/web-api/web-speech/speechrecognition-demo';
 import WebSocketDemo from '@/pages/web-api/websocket/websocket-demo';
-import SocketIODemo from '@/pages/library/socketio/socketio-demo';
 import WebRTCDemo from '@/pages/web-api/webrtc/webrtc-demo';
 
 export const router = createBrowserRouter([
@@ -48,10 +47,6 @@ export const router = createBrowserRouter([
   {
     path: 'websocket',
     element: <WebSocketDemo />,
-  },
-  {
-    path: 'socketio',
-    element: <SocketIODemo />,
   },
   {
     path: 'webrtc',

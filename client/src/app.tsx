@@ -26,9 +26,6 @@ const categories = [
     path: 'websocket',
   },
   {
-    path: 'socketio',
-  },
-  {
     path: 'webrtc',
   },
 ] as const;

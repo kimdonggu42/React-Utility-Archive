@@ -51,6 +51,8 @@
   gainNode.connect(audioContext.destination);
   ```
 
+- 예를 들어,  `gainNode.connect(mediaStreamAudioDestinationNode)` 이 코드는 gainNode의 출력(오디오 신호)을 mediaStreamAudioDestinationNode의 입력으로 연결하는 것이다. 즉, Web Audio API에서 nodeA.connect(nodeB)라고 적으면, nodeA의 출력이 nodeB로 흘러가도록 설정된다.
+  
   <img width="100%" alt="웹 오디오 작업 흐름" src="https://github.com/user-attachments/assets/af356f38-604f-443f-a66e-b7d5305c9394">
 
   > [MDN: Web Audio API](https://developer.mozilla.org/ko/docs/Web/API/Web_Audio_API)

@@ -391,43 +391,48 @@
   channel.onmessage = (event) => console.log(event.data);
   ```
 
-  ### DataChannel과 WebSocket 비교
+# 6. WebRTC data channel과 WebSocket 비교
 
-    <table>
-      <thead>
-        <tr>
-          <th>특징</th>
-          <th>DataChannel</th>
-          <th>WebSocket</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>연결 구조</td>
-          <td>P2P 기반 (브라우저 간 직접 연결)</td>
-          <td>클라이언트 ↔ 서버 연결</td>
-        </tr>
-        <tr>
-          <td>지연 시간</td>
-          <td>매우 낮음 (UDP 기반 가능)</td>
-          <td>상대적으로 높음 (TCP 기반)</td>
-        </tr>
-        <tr>
-          <td>신뢰성</td>
-          <td>선택적 (신뢰성 여부 설정 가능)</td>
-          <td>항상 신뢰성 보장</td>
-        </tr>
-        <tr>
-          <td>네트워크</td>
-          <td>STUN/TURN 서버를 통해 NAT 트래버설 필요</td>
-          <td>서버를 통해 직접 연결 가능</td>
-        </tr>
-        <tr>
-          <td>사용 사례</td>
-          <td>채팅, 파일 전송, 게임 동기화</td>
-          <td>일반적인 실시간 통신</td>
-        </tr>
-      </tbody>
-    </table>
+<table>
+  <thead>
+    <tr>
+      <th>특징</th>
+      <th>WebSocket</th>
+      <th>DataChannel</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>통신 방식</td>
+      <td>클라이언트 ↔ 서버 연결</td>
+      <td>P2P 기반 (브라우저 간 직접 연결)</td>
+    </tr>
+    <tr>
+      <td>네트워크 경로</td>
+      <td>항상 서버를 거침</td>
+      <td>클라이언트 간 직접 연결</td>
+    </tr>
+    <tr>
+      <td>지연 시간</td>
+      <td>비교적 낮음 (100ms, TCP 기반)</td>
+      <td>매우 낮음 (실시간 수준, UDP 기반 가능)</td>
+    </tr>
+    <tr>
+      <td>신뢰성</td>
+      <td>신뢰성 보장(TCP 기반)</td>
+      <td>선택 가능 (신뢰성, 순서 보장 여부 설정 가능)</td>
+    </tr>
+    <tr>
+      <td>연결 과정</td>
+      <td>간단 (즉시 연결)</td>
+      <td>복잡 (시그널링, ICE, SDP, NAT traversal 등 필요)</td>
+    </tr>
+    <tr>
+      <td>사용 사례</td>
+      <td>일반적인 클라이언트 ↔ 서버 메시징</td>
+      <td>실시간 스트리밍, 파일 전송 등</td>
+    </tr>
+  </tbody>
+</table>
 
-  > [MDN: RTCDataChannel](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)
+> [MDN: RTCDataChannel](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)

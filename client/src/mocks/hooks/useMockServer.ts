@@ -1,7 +1,10 @@
+import { setupWorker } from 'msw/browser';
 import { useState, useEffect } from 'react';
 
+type WorkerType = ReturnType<typeof setupWorker>;
+
 export const useMockServer = () => {
-  const [mockWorker, setMockWorker] = useState<any>(null);
+  const [mockWorker, setMockWorker] = useState<WorkerType | null>(null);
 
   useEffect(() => {
     const initializeMocking = async () => {

@@ -5,6 +5,7 @@ export const useThrottle = () => {
 
   return (callback: () => void, delay: number) => {
     if (timerId.current) return;
+
     timerId.current = window.setTimeout(() => {
       callback();
       timerId.current = null;
